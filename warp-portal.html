@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>대취타 포토부스 🥁</title>
+<title>전통·서양 의상 포토부스</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -26,22 +26,50 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 28px 16px 60px;
+    padding: 26px 16px 60px;
   }
-  header { text-align: center; margin-bottom: 22px; }
+  header { text-align: center; margin-bottom: 18px; }
   h1 {
     font-family: 'Noto Serif KR', serif;
     font-weight: 900;
-    font-size: clamp(22px, 5vw, 34px);
-    letter-spacing: 6px;
+    font-size: clamp(20px, 5vw, 30px);
+    letter-spacing: 4px;
     color: #fff;
     text-shadow: 0 0 18px var(--purple), 0 0 46px var(--magenta);
   }
   .sub {
     margin-top: 8px;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--ink-dim);
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
+  }
+
+  .theme-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    width: min(92vw, 420px);
+    padding: 4px 2px 10px;
+    margin-bottom: 8px;
+    scrollbar-width: thin;
+  }
+  .theme-chip {
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 9px 15px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(124,77,255,0.06);
+    color: var(--ink-dim);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .theme-chip.active {
+    background: linear-gradient(135deg, var(--purple), var(--magenta));
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 0 16px rgba(124,77,255,0.5);
   }
 
   .stage-wrap {
@@ -64,7 +92,7 @@
     position: absolute; inset: 0;
     width: 100%; height: 100%;
   }
-  #guideOval {
+  .guide-oval {
     position: absolute;
     border: 2px dashed var(--gold);
     border-radius: 50%;
@@ -72,7 +100,8 @@
     box-shadow: 0 0 14px rgba(245,208,120,0.6);
     display: none;
   }
-  .stage-wrap.editing #guideOval { display: block; }
+  .guide-oval.p2 { border-color: var(--magenta); box-shadow: 0 0 14px rgba(224,64,251,0.6); }
+  .stage-wrap.editing .guide-oval { display: block; }
 
   .status {
     position: absolute; inset: 0;
@@ -84,37 +113,49 @@
     font-size: 13px;
     color: var(--ink-dim);
     background: rgba(5,2,8,0.6);
+    z-index: 5;
   }
-  .status button {
-    pointer-events: auto;
+  .status button { pointer-events: auto; }
+
+  .loading-tag {
+    position: absolute;
+    top: 10px; left: 10px;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.55);
+    color: var(--gold);
+    z-index: 4;
+    display: none;
   }
+  .loading-tag.show { display: block; }
 
   .panel {
     width: min(88vw, 380px);
-    margin-top: 18px;
+    margin-top: 16px;
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--line);
     border-radius: 14px;
     padding: 16px 18px;
   }
   .panel h2 {
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 2px;
     color: var(--gold);
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
+  .panel h2.p2label { color: var(--magenta); margin-top: 14px; }
   .row {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 9px;
   }
   .row label { width: 66px; font-size: 12px; color: var(--ink-dim); flex-shrink: 0; }
-  .row input[type=range] {
-    flex: 1;
-    accent-color: var(--purple);
-  }
+  .row input[type=range] { flex: 1; accent-color: var(--purple); }
+  .row.p2 input[type=range] { accent-color: var(--magenta); }
+
   .toggles {
     display: flex;
     gap: 8px;
@@ -146,7 +187,7 @@
 
   .actions {
     width: min(88vw, 380px);
-    margin-top: 20px;
+    margin-top: 18px;
     display: flex;
     gap: 12px;
   }
@@ -175,7 +216,7 @@
   .result {
     display: none;
     width: min(88vw, 380px);
-    margin-top: 22px;
+    margin-top: 20px;
     text-align: center;
   }
   .result.show { display: block; }
@@ -187,7 +228,7 @@
   .result .actions { margin-top: 14px; }
 
   footer {
-    margin-top: 30px;
+    margin-top: 28px;
     font-size: 11px;
     color: rgba(169,158,203,0.5);
     text-align: center;
@@ -199,14 +240,18 @@
 <body>
 
 <header>
-  <h1>대취타 포토부스</h1>
-  <div class="sub">얼굴을 맞추고, 촬영하세요</div>
+  <h1>전통 · 서양 의상 포토부스</h1>
+  <div class="sub">테마를 고르고, 얼굴을 맞추고, 촬영하세요</div>
 </header>
+
+<div class="theme-bar" id="themeBar"></div>
 
 <div class="stage-wrap" id="stageWrap">
   <video id="cam" autoplay playsinline muted></video>
   <canvas id="maskCanvas"></canvas>
-  <div id="guideOval"></div>
+  <div class="loading-tag" id="loadingTag">그림 불러오는 중...</div>
+  <div class="guide-oval" id="guideOval1"></div>
+  <div class="guide-oval p2" id="guideOval2"></div>
   <div class="status" id="statusOverlay">
     <div>카메라를 시작해주세요</div>
     <button class="btn" id="startCamBtn" style="width:auto;padding:12px 24px;font-size:14px;">🎥 카메라 시작</button>
@@ -214,17 +259,27 @@
 </div>
 
 <div class="panel">
-  <h2>얼굴 위치 맞추기</h2>
+  <h2 id="p1Label">얼굴 위치 맞추기</h2>
   <div class="row"><label>좌우</label><input type="range" id="ox" min="0" max="100" value="50"></div>
   <div class="row"><label>상하</label><input type="range" id="oy" min="0" max="100" value="34"></div>
   <div class="row"><label>너비</label><input type="range" id="ow" min="5" max="60" value="26"></div>
   <div class="row"><label>높이</label><input type="range" id="oh" min="5" max="60" value="22"></div>
+
+  <div id="p2Block" style="display:none;">
+    <h2 class="p2label">인물 2 얼굴 위치</h2>
+    <div class="row p2"><label>좌우</label><input type="range" id="ox2" min="0" max="100" value="70"></div>
+    <div class="row p2"><label>상하</label><input type="range" id="oy2" min="0" max="100" value="34"></div>
+    <div class="row p2"><label>너비</label><input type="range" id="ow2" min="5" max="60" value="26"></div>
+    <div class="row p2"><label>높이</label><input type="range" id="oh2" min="5" max="60" value="22"></div>
+  </div>
+
   <div class="toggles">
     <div class="chip active" id="editToggle">📐 위치 조정 중</div>
+    <div class="chip" id="twoPersonToggle">👥 인물 2명</div>
     <div class="chip" id="mirrorToggle">🪞 좌우반전</div>
     <div class="chip" id="switchCamBtn">🔄 카메라 전환</div>
     <label class="upload-btn">
-      🖼️ 그림 바꾸기
+      🖼️ 이 테마 그림 바꾸기
       <input type="file" id="fileInput" accept="image/*">
     </label>
     <div class="chip" id="rerollBtn">🎲 기본 그림 새로 받기</div>
@@ -238,22 +293,85 @@
 <div class="result" id="resultBox">
   <img id="resultImg" alt="촬영 결과">
   <div class="actions">
-    <a class="btn" id="downloadBtn" download="daechwita-photo.jpg" style="text-decoration:none;text-align:center;">💾 저장</a>
+    <a class="btn" id="downloadBtn" download="costume-photo.jpg" style="text-decoration:none;text-align:center;">💾 저장</a>
     <button class="btn secondary" id="retakeBtn">다시 찍기</button>
   </div>
 </div>
 
 <footer>
-  기본 그림은 AI로 생성된 이미지입니다. 슬라이더로 얼굴 구멍 위치를 먼저 맞춘 뒤 촬영하세요.
-  카메라가 열리지 않으면, 이 페이지를 실제 브라우저 탭(배포된 주소)에서 열어 카메라 권한을 허용해주세요.
+  각 테마의 그림은 AI로 생성됩니다. 테마를 바꿔도 이전에 맞춘 얼굴 위치는 테마별로 따로 저장돼요.
+  카메라가 열리지 않으면, 이 페이지를 실제 배포된 주소(브라우저 탭)에서 열어 카메라 권한을 허용해주세요.
 </footer>
 
 <script>
+const THEMES = [
+  {
+    id: 'daechwita',
+    label: '대취타',
+    prompt: "Korean Joseon dynasty daechwita royal military parade band, full ensemble of musicians in colorful traditional court costumes, one large drummer playing yonggo drum prominently in the front center facing viewer, painterly digital illustration, dramatic warm lighting, ornate hanbok details, vertical portrait composition, rich color, fantasy epic atmosphere",
+    twoPerson: false,
+    oval: { ox:50, oy:34, ow:26, oh:22 }
+  },
+  {
+    id: 'joseon-royal',
+    label: '조선왕실',
+    prompt: "Korean Joseon dynasty king and queen in royal court attire, king wearing gonryongpo dragon robe and black gwanmo crown, queen wearing dangui and jokduri headpiece, standing side by side in a grand palace throne hall, painterly digital illustration, ornate gold embroidery, regal dramatic lighting, vertical portrait composition, rich color, fantasy epic atmosphere",
+    twoPerson: true,
+    oval:  { ox:34, oy:32, ow:24, oh:20 },
+    oval2: { ox:66, oy:32, ow:24, oh:20 }
+  },
+  {
+    id: 'jeongak',
+    label: '정악의상',
+    prompt: "Korean traditional jeongak court classical music ensemble, musicians in elegant refined court music costumes playing traditional instruments such as piri and daegeum, one performer prominent in front center facing viewer, painterly digital illustration, serene elegant atmosphere, vertical portrait composition, rich color",
+    twoPerson: false,
+    oval: { ox:50, oy:32, ow:26, oh:22 }
+  },
+  {
+    id: 'sinawi',
+    label: '시나위의상',
+    prompt: "Korean traditional sinawi folk shamanic ensemble music performers in vivid folk costumes, dynamic energetic atmosphere, musicians playing janggu drum and piri, one performer prominent in front center facing viewer, painterly digital illustration, vertical portrait composition, vivid saturated color",
+    twoPerson: false,
+    oval: { ox:50, oy:34, ow:26, oh:22 }
+  },
+  {
+    id: 'silla',
+    label: '신라시대의상',
+    prompt: "Ancient Korean Silla dynasty nobility in traditional silla period royal attire, ornate gold crown and jewelry, elegant flowing robes, standing figure facing viewer, painterly digital illustration, ancient Korean historical atmosphere, vertical portrait composition, rich color",
+    twoPerson: false,
+    oval: { ox:50, oy:30, ow:26, oh:22 }
+  },
+  {
+    id: 'euro-classical',
+    label: '유럽 고전파의상',
+    prompt: "European Classical era 18th century courtier in elegant formal attire, powdered wig, ornate embroidered coat, standing portrait facing viewer, painterly digital illustration, Mozart era Vienna salon atmosphere, vertical portrait composition, rich color",
+    twoPerson: false,
+    oval: { ox:50, oy:32, ow:26, oh:22 }
+  }
+];
+
+const state = {};
+THEMES.forEach(t => {
+  state[t.id] = {
+    img: null,
+    customSrc: null,
+    seed: Math.floor(Math.random()*100000),
+    oval: { ...t.oval },
+    oval2: t.oval2 ? { ...t.oval2 } : { ox:70, oy:34, ow:26, oh:22 },
+    twoPerson: t.twoPerson
+  };
+});
+
+let currentThemeId = THEMES[0].id;
+
+const themeBar = document.getElementById('themeBar');
 const stageWrap = document.getElementById('stageWrap');
 const video = document.getElementById('cam');
 const maskCanvas = document.getElementById('maskCanvas');
 const mctx = maskCanvas.getContext('2d');
-const guideOval = document.getElementById('guideOval');
+const loadingTag = document.getElementById('loadingTag');
+const guideOval1 = document.getElementById('guideOval1');
+const guideOval2 = document.getElementById('guideOval2');
 const statusOverlay = document.getElementById('statusOverlay');
 const startCamBtn = document.getElementById('startCamBtn');
 const captureBtn = document.getElementById('captureBtn');
@@ -262,49 +380,92 @@ const resultImg = document.getElementById('resultImg');
 const downloadBtn = document.getElementById('downloadBtn');
 const retakeBtn = document.getElementById('retakeBtn');
 const editToggle = document.getElementById('editToggle');
+const twoPersonToggle = document.getElementById('twoPersonToggle');
 const mirrorToggle = document.getElementById('mirrorToggle');
 const switchCamBtn = document.getElementById('switchCamBtn');
 const fileInput = document.getElementById('fileInput');
 const rerollBtn = document.getElementById('rerollBtn');
+const p2Block = document.getElementById('p2Block');
+const p1Label = document.getElementById('p1Label');
 
-const oxEl = document.getElementById('ox');
-const oyEl = document.getElementById('oy');
-const owEl = document.getElementById('ow');
-const ohEl = document.getElementById('oh');
+const oxEl = document.getElementById('ox'), oyEl = document.getElementById('oy');
+const owEl = document.getElementById('ow'), ohEl = document.getElementById('oh');
+const ox2El = document.getElementById('ox2'), oy2El = document.getElementById('oy2');
+const ow2El = document.getElementById('ow2'), oh2El = document.getElementById('oh2');
 
 let currentStream = null;
 let facingMode = 'user';
 let mirrored = true;
 let editing = true;
-let illustration = new Image();
-illustration.crossOrigin = 'anonymous';
 
-const DAECHWITA_PROMPT = "Korean Joseon dynasty daechwita royal military parade band, full ensemble of musicians in colorful traditional court costumes, one large drummer playing yonggo drum prominently in the front center facing viewer, painterly digital illustration, dramatic warm lighting, ornate hanbok details, vertical portrait composition, rich color, fantasy epic atmosphere";
+THEMES.forEach(t => {
+  const chip = document.createElement('div');
+  chip.className = 'theme-chip' + (t.id === currentThemeId ? ' active' : '');
+  chip.textContent = t.label;
+  chip.dataset.id = t.id;
+  chip.addEventListener('click', () => selectTheme(t.id));
+  themeBar.appendChild(chip);
+});
 
-function pollinationsUrl(seed) {
-  const p = encodeURIComponent(DAECHWITA_PROMPT);
+function pollinationsUrl(prompt, seed) {
+  const p = encodeURIComponent(prompt);
   return `https://image.pollinations.ai/prompt/${p}?width=900&height=1200&nologo=true&seed=${seed}`;
 }
 
-function loadIllustration(url) {
+function themeDef(id) { return THEMES.find(t => t.id === id); }
+
+function ensureImageLoaded(id, force) {
+  const s = state[id];
+  if (s.img && !force) { if (id === currentThemeId) drawMask(); return; }
+  const url = s.customSrc || pollinationsUrl(themeDef(id).prompt, s.seed);
+  if (id === currentThemeId) { loadingTag.classList.add('show'); }
   const img = new Image();
   img.crossOrigin = 'anonymous';
-  img.onload = () => { illustration = img; drawMask(); };
-  img.onerror = () => { console.warn('이미지를 불러오지 못했습니다:', url); };
+  img.onload = () => {
+    s.img = img;
+    if (id === currentThemeId) { loadingTag.classList.remove('show'); drawMask(); }
+  };
+  img.onerror = () => {
+    if (id === currentThemeId) loadingTag.classList.remove('show');
+    console.warn('이미지를 불러오지 못했습니다:', url);
+  };
   img.src = url;
 }
 
-loadIllustration(pollinationsUrl(Math.floor(Math.random()*100000)));
+function selectTheme(id) {
+  currentThemeId = id;
+  document.querySelectorAll('.theme-chip').forEach(c => c.classList.toggle('active', c.dataset.id === id));
+
+  const s = state[id];
+  oxEl.value = s.oval.ox; oyEl.value = s.oval.oy; owEl.value = s.oval.ow; ohEl.value = s.oval.oh;
+  ox2El.value = s.oval2.ox; oy2El.value = s.oval2.oy; ow2El.value = s.oval2.ow; oh2El.value = s.oval2.oh;
+
+  twoPersonToggle.classList.toggle('active', s.twoPerson);
+  p2Block.style.display = s.twoPerson ? 'block' : 'none';
+  p1Label.textContent = s.twoPerson ? '인물 1 얼굴 위치' : '얼굴 위치 맞추기';
+
+  ensureImageLoaded(id, false);
+  updateGuideOvals();
+}
+
+ensureImageLoaded(currentThemeId, false);
 
 rerollBtn.addEventListener('click', () => {
-  loadIllustration(pollinationsUrl(Math.floor(Math.random()*100000)));
+  const s = state[currentThemeId];
+  s.customSrc = null;
+  s.seed = Math.floor(Math.random()*100000);
+  ensureImageLoaded(currentThemeId, true);
 });
 
 fileInput.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => loadIllustration(ev.target.result);
+  reader.onload = (ev) => {
+    const s = state[currentThemeId];
+    s.customSrc = ev.target.result;
+    ensureImageLoaded(currentThemeId, true);
+  };
   reader.readAsDataURL(file);
 });
 
@@ -313,31 +474,37 @@ function resizeCanvas() {
   maskCanvas.width = rect.width;
   maskCanvas.height = rect.height;
   drawMask();
-  updateGuideOval();
+  updateGuideOvals();
 }
 window.addEventListener('resize', resizeCanvas);
 
-function getOvalParams() {
-  return {
-    cxPct: parseFloat(oxEl.value) / 100,
-    cyPct: parseFloat(oyEl.value) / 100,
-    rxPct: parseFloat(owEl.value) / 100 / 2,
-    ryPct: parseFloat(ohEl.value) / 100 / 2,
-  };
+function readOvalFromInputs() {
+  const s = state[currentThemeId];
+  s.oval = { ox:+oxEl.value, oy:+oyEl.value, ow:+owEl.value, oh:+ohEl.value };
+  s.oval2 = { ox:+ox2El.value, oy:+oy2El.value, ow:+ow2El.value, oh:+oh2El.value };
+}
+
+function ovalToPct(o) {
+  return { cxPct:o.ox/100, cyPct:o.oy/100, rxPct:o.ow/100/2, ryPct:o.oh/100/2 };
 }
 
 function drawMask() {
   const w = maskCanvas.width, h = maskCanvas.height;
   if (!w || !h) return;
   mctx.clearRect(0, 0, w, h);
-  if (illustration.complete && illustration.naturalWidth) {
-    drawCover(mctx, illustration, w, h);
-  }
-  const { cxPct, cyPct, rxPct, ryPct } = getOvalParams();
+  const s = state[currentThemeId];
+  if (s.img) drawCover(mctx, s.img, w, h);
+
+  const ovals = [s.oval];
+  if (s.twoPerson) ovals.push(s.oval2);
+
   mctx.globalCompositeOperation = 'destination-out';
-  mctx.beginPath();
-  mctx.ellipse(w*cxPct, h*cyPct, w*rxPct, h*ryPct, 0, 0, Math.PI*2);
-  mctx.fill();
+  ovals.forEach(o => {
+    const { cxPct, cyPct, rxPct, ryPct } = ovalToPct(o);
+    mctx.beginPath();
+    mctx.ellipse(w*cxPct, h*cyPct, w*rxPct, h*ryPct, 0, 0, Math.PI*2);
+    mctx.fill();
+  });
   mctx.globalCompositeOperation = 'source-over';
 }
 
@@ -349,20 +516,26 @@ function drawCover(ctx, img, targetW, targetH) {
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
 }
 
-function updateGuideOval() {
-  const { cxPct, cyPct, rxPct, ryPct } = getOvalParams();
+function updateGuideOvals() {
+  const s = state[currentThemeId];
   const w = stageWrap.clientWidth, h = stageWrap.clientHeight;
-  const left = (cxPct - rxPct) * w;
-  const top = (cyPct - ryPct) * h;
-  guideOval.style.left = left + 'px';
-  guideOval.style.top = top + 'px';
-  guideOval.style.width = (rxPct*2*w) + 'px';
-  guideOval.style.height = (ryPct*2*h) + 'px';
+
+  const place = (el, o) => {
+    const { cxPct, cyPct, rxPct, ryPct } = ovalToPct(o);
+    el.style.left = ((cxPct - rxPct) * w) + 'px';
+    el.style.top = ((cyPct - ryPct) * h) + 'px';
+    el.style.width = (rxPct*2*w) + 'px';
+    el.style.height = (ryPct*2*h) + 'px';
+  };
+  place(guideOval1, s.oval);
+  guideOval2.style.display = s.twoPerson ? 'block' : 'none';
+  if (s.twoPerson) place(guideOval2, s.oval2);
 }
 
-[oxEl, oyEl, owEl, ohEl].forEach(el => el.addEventListener('input', () => {
+[oxEl, oyEl, owEl, ohEl, ox2El, oy2El, ow2El, oh2El].forEach(el => el.addEventListener('input', () => {
+  readOvalFromInputs();
   drawMask();
-  updateGuideOval();
+  updateGuideOvals();
 }));
 
 editToggle.addEventListener('click', () => {
@@ -372,6 +545,16 @@ editToggle.addEventListener('click', () => {
   editToggle.textContent = editing ? '📐 위치 조정 중' : '📐 위치 조정 끄기';
 });
 stageWrap.classList.add('editing');
+
+twoPersonToggle.addEventListener('click', () => {
+  const s = state[currentThemeId];
+  s.twoPerson = !s.twoPerson;
+  twoPersonToggle.classList.toggle('active', s.twoPerson);
+  p2Block.style.display = s.twoPerson ? 'block' : 'none';
+  p1Label.textContent = s.twoPerson ? '인물 1 얼굴 위치' : '얼굴 위치 맞추기';
+  drawMask();
+  updateGuideOvals();
+});
 
 mirrorToggle.addEventListener('click', () => {
   mirrored = !mirrored;
@@ -406,32 +589,31 @@ switchCamBtn.addEventListener('click', () => {
 });
 
 captureBtn.addEventListener('click', () => {
+  const s = state[currentThemeId];
   const outW = 1080, outH = 1440;
   const finalCanvas = document.createElement('canvas');
   finalCanvas.width = outW; finalCanvas.height = outH;
   const fctx = finalCanvas.getContext('2d');
 
-  // 1. draw current video frame (respecting mirror), cover-fit
   fctx.save();
-  if (mirrored) {
-    fctx.translate(outW, 0);
-    fctx.scale(-1, 1);
-  }
+  if (mirrored) { fctx.translate(outW, 0); fctx.scale(-1, 1); }
   drawCover(fctx, video, outW, outH);
   fctx.restore();
 
-  // 2. draw illustration-with-hole on top
   const illustLayer = document.createElement('canvas');
   illustLayer.width = outW; illustLayer.height = outH;
   const lctx = illustLayer.getContext('2d');
-  if (illustration.complete && illustration.naturalWidth) {
-    drawCover(lctx, illustration, outW, outH);
-  }
-  const { cxPct, cyPct, rxPct, ryPct } = getOvalParams();
+  if (s.img) drawCover(lctx, s.img, outW, outH);
+
+  const ovals = [s.oval];
+  if (s.twoPerson) ovals.push(s.oval2);
   lctx.globalCompositeOperation = 'destination-out';
-  lctx.beginPath();
-  lctx.ellipse(outW*cxPct, outH*cyPct, outW*rxPct, outH*ryPct, 0, 0, Math.PI*2);
-  lctx.fill();
+  ovals.forEach(o => {
+    const { cxPct, cyPct, rxPct, ryPct } = ovalToPct(o);
+    lctx.beginPath();
+    lctx.ellipse(outW*cxPct, outH*cyPct, outW*rxPct, outH*ryPct, 0, 0, Math.PI*2);
+    lctx.fill();
+  });
 
   fctx.drawImage(illustLayer, 0, 0);
 
@@ -439,7 +621,7 @@ captureBtn.addEventListener('click', () => {
   resultImg.src = dataUrl;
   downloadBtn.href = dataUrl;
   const ts = new Date().toISOString().replace(/[:.]/g,'-');
-  downloadBtn.download = `daechwita-${ts}.jpg`;
+  downloadBtn.download = `${currentThemeId}-${ts}.jpg`;
   resultBox.classList.add('show');
   resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
@@ -448,7 +630,7 @@ retakeBtn.addEventListener('click', () => {
   resultBox.classList.remove('show');
 });
 
-// init guide once layout settles
+selectTheme(currentThemeId);
 requestAnimationFrame(() => { resizeCanvas(); });
 </script>
 </body>
