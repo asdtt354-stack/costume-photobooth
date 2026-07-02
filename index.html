@@ -26,7 +26,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 26px 16px 60px;
+    padding: 26px 16px 110px;
   }
   header { text-align: center; margin-bottom: 18px; }
   h1 {
@@ -187,6 +187,18 @@
   }
   input[type=file] { display: none; }
 
+  .capture-bar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(10,6,18,0.97) 60%, rgba(10,6,18,0));
+  }
+  .capture-bar .btn {
+    width: min(88vw, 380px);
+  }
   .actions {
     width: min(88vw, 380px);
     margin-top: 18px;
@@ -383,7 +395,7 @@
   </div>
 </div>
 
-<div class="actions">
+<div class="capture-bar" id="captureBar">
   <button class="btn" id="captureBtn" disabled>📸 촬영</button>
 </div>
 
@@ -409,55 +421,55 @@ const THEMES = [
     label: '대취타',
     icon: '🥁',
     tag: '조선 행진음악',
-    prompt: "Korean Joseon dynasty daechwita royal military parade band, full ensemble of musicians in colorful traditional court costumes, one large drummer playing yonggo drum prominently in the front center facing viewer, painterly digital illustration, dramatic warm lighting, ornate hanbok details, vertical portrait composition, rich color, fantasy epic atmosphere",
+    prompt: "Korean daechwita royal military band marching in procession, musicians wearing bright yellow durumagi long robes with wide sleeves, tall black horsehair gat hats with tall white feather plumes on top, blue waist sash tied around the robe, one drummer in front prominently holding an ornate barrel-shaped yonggo drum painted with colorful red blue and gold dragon and floral patterns, holding drumsticks with red pom-pom tassels raised mid-strike, drummer facing viewer at the center of the frame, other musicians behind holding taepyeongso horns, overcast outdoor street parade atmosphere, photorealistic editorial photography style, natural daylight, vertical portrait composition, sharp focus on the front drummer's face area",
     twoPerson: false,
-    oval: { ox:50, oy:34, ow:26, oh:22 }
+    oval: { ox:50, oy:36, ow:42, oh:38 }
   },
   {
     id: 'joseon-royal',
     label: '조선왕실',
     icon: '👑',
     tag: '왕과 왕비 (2인)',
-    prompt: "Korean Joseon dynasty king and queen in royal court attire, king wearing gonryongpo dragon robe and black gwanmo crown, queen wearing dangui and jokduri headpiece, standing side by side in a grand palace throne hall, painterly digital illustration, ornate gold embroidery, regal dramatic lighting, vertical portrait composition, rich color, fantasy epic atmosphere",
+    prompt: "Korean Joseon dynasty king and queen formal portrait, king wearing gollyongpo a deep crimson red round-collar robe embroidered with a gold five-clawed dragon roundel on the chest, back, and both shoulders, a black ikseongwan cap with two upward cicada-wing shaped prongs at the back, a jade-studded belt, queen wearing jeogui a deep indigo blue formal ceremonial robe patterned with rows of small gold embroidered pheasant roundels and wide sleeves, an elaborate tall daesu royal wig ornamented with gold hairpins and dangling jewel ornaments, standing side by side in a grand palace throne hall with dragon carved pillars and a folding screen backdrop, painterly digital illustration, ornate gold embroidery detail, regal dramatic lighting, vertical portrait composition, rich color, majestic atmosphere",
     twoPerson: true,
-    oval:  { ox:34, oy:32, ow:24, oh:20 },
-    oval2: { ox:66, oy:32, ow:24, oh:20 }
+    oval:  { ox:32, oy:32, ow:34, oh:32 },
+    oval2: { ox:68, oy:32, ow:34, oh:32 }
   },
   {
     id: 'jeongak',
     label: '정악의상',
     icon: '🎼',
     tag: '궁중 정악 합주',
-    prompt: "Korean traditional jeongak court classical music ensemble, musicians in elegant refined court music costumes playing traditional instruments such as piri and daegeum, one performer prominent in front center facing viewer, painterly digital illustration, serene elegant atmosphere, vertical portrait composition, rich color",
+    prompt: "Korean traditional jeongak court classical music ensemble performers, wearing simple elegant dopo robes in pale ivory or soft blue with wide sleeves tied with a plain fabric belt, black horsehair gat hats, a refined understated scholarly aesthetic rather than flashy costume, seated in a row playing traditional instruments such as piri double reed pipe, daegeum bamboo flute, and haegeum two string fiddle, one performer prominent in the front center facing the viewer, painterly digital illustration, soft serene lighting, elegant restrained court atmosphere, vertical portrait composition, muted refined color palette",
     twoPerson: false,
-    oval: { ox:50, oy:32, ow:26, oh:22 }
+    oval: { ox:50, oy:34, ow:42, oh:38 }
   },
   {
     id: 'sinawi',
     label: '시나위의상',
     icon: '🪘',
     tag: '민속 시나위 합주',
-    prompt: "Korean traditional sinawi folk shamanic ensemble music performers in vivid folk costumes, dynamic energetic atmosphere, musicians playing janggu drum and piri, one performer prominent in front center facing viewer, painterly digital illustration, vertical portrait composition, vivid saturated color",
+    prompt: "Korean traditional sinawi folk instrumental ensemble performers, wearing everyday vivid colored hanbok in warm earthy tones rather than ceremonial costume, dynamic energetic atmosphere of improvised folk music, musicians playing janggu hourglass drum, piri, daegeum, and haegeum together in a loose circle, one performer prominent in the front center mid performance facing the viewer, painterly digital illustration, vertical portrait composition, vivid saturated color, rustic folk market backdrop",
     twoPerson: false,
-    oval: { ox:50, oy:34, ow:26, oh:22 }
+    oval: { ox:50, oy:36, ow:42, oh:38 }
   },
   {
     id: 'silla',
     label: '신라시대의상',
     icon: '⚜️',
     tag: '신라 귀족 복식',
-    prompt: "Ancient Korean Silla dynasty nobility in traditional silla period royal attire, ornate gold crown and jewelry, elegant flowing robes, standing figure facing viewer, painterly digital illustration, ancient Korean historical atmosphere, vertical portrait composition, rich color",
+    prompt: "Ancient Korean Silla dynasty nobility portrait, wearing an ornate gold crown geumgwan with tree and antler shaped prongs decorated with dangling jade comma shaped gogok jewels, layered silk robes with wide sleeves in vivid naturally dyed colors, elaborate gold necklace and belt ornaments, standing figure facing the viewer with a dignified regal expression, painterly digital illustration, ancient Korean historical atmosphere inspired by Gyeongju royal tomb artifacts, vertical portrait composition, rich color",
     twoPerson: false,
-    oval: { ox:50, oy:30, ow:26, oh:22 }
+    oval: { ox:50, oy:32, ow:42, oh:38 }
   },
   {
     id: 'euro-classical',
     label: '유럽 고전파의상',
     icon: '🎻',
     tag: '18세기 유럽 궁정',
-    prompt: "European Classical era 18th century courtier in elegant formal attire, powdered wig, ornate embroidered coat, standing portrait facing viewer, painterly digital illustration, Mozart era Vienna salon atmosphere, vertical portrait composition, rich color",
+    prompt: "European Classical era 18th century courtier in elegant formal attire, a powdered white wig, an ornate embroidered silk coat with a lace jabot at the collar, a waistcoat with gold trim, standing portrait facing the viewer, painterly digital illustration, Vienna concert salon backdrop with candlelit chandeliers, Mozart era atmosphere, vertical portrait composition, rich warm color palette",
     twoPerson: false,
-    oval: { ox:50, oy:32, ow:26, oh:22 }
+    oval: { ox:50, oy:34, ow:42, oh:38 }
   }
 ];
 
@@ -491,6 +503,7 @@ const guideOval2 = document.getElementById('guideOval2');
 const statusOverlay = document.getElementById('statusOverlay');
 const startCamBtn = document.getElementById('startCamBtn');
 const captureBtn = document.getElementById('captureBtn');
+const captureBar = document.getElementById('captureBar');
 const resultBox = document.getElementById('resultBox');
 const resultImg = document.getElementById('resultImg');
 const downloadBtn = document.getElementById('downloadBtn');
@@ -541,6 +554,7 @@ function enterBooth(id) {
 function exitBooth() {
   if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); currentStream = null; }
   captureBtn.disabled = true;
+  captureBar.style.display = 'flex';
   resultBox.classList.remove('show');
   statusOverlay.style.display = 'flex';
   statusOverlay.innerHTML = `<div>카메라를 시작해주세요</div><button class="btn" id="startCamBtn" style="width:auto;padding:12px 24px;font-size:14px;">🎥 카메라 시작</button>`;
@@ -767,11 +781,13 @@ captureBtn.addEventListener('click', () => {
   const ts = new Date().toISOString().replace(/[:.]/g,'-');
   downloadBtn.download = `${currentThemeId}-${ts}.jpg`;
   resultBox.classList.add('show');
+  captureBar.style.display = 'none';
   resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
 
 retakeBtn.addEventListener('click', () => {
   resultBox.classList.remove('show');
+  captureBar.style.display = 'flex';
 });
 
 selectTheme(currentThemeId);
