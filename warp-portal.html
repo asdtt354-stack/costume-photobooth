@@ -33,9 +33,11 @@
     font-family: 'Noto Serif KR', serif;
     font-weight: 900;
     font-size: clamp(20px, 5vw, 30px);
-    letter-spacing: 4px;
+    letter-spacing: clamp(1px, 0.6vw, 4px);
     color: #fff;
     text-shadow: 0 0 18px var(--purple), 0 0 46px var(--magenta);
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
   .sub {
     margin-top: 8px;
@@ -245,10 +247,13 @@
   .entry-title {
     font-family: 'Noto Serif KR', serif;
     font-weight: 900;
-    font-size: clamp(24px, 6vw, 38px);
-    letter-spacing: 5px;
+    font-size: clamp(22px, 5.5vw, 34px);
+    letter-spacing: clamp(1px, 0.8vw, 4px);
     color: #fff;
     text-shadow: 0 0 20px var(--purple), 0 0 50px var(--magenta);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-height: 1.3;
   }
   .entry-sub {
     margin-top: 10px;
@@ -289,6 +294,7 @@
     font-size: 15px;
     letter-spacing: 1px;
     color: #fff;
+    word-break: keep-all;
   }
   .theme-card .tag {
     font-size: 10.5px;
@@ -296,6 +302,7 @@
     letter-spacing: 0.5px;
     text-align: center;
     line-height: 1.4;
+    word-break: keep-all;
   }
 
   .back-row {
