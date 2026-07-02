@@ -235,14 +235,104 @@
     max-width: 340px;
     line-height: 1.6;
   }
+
+  /* ── 입구 선택 화면 ── */
+  .hidden { display: none !important; }
+  .entry-wrap {
+    width: min(92vw, 460px);
+    text-align: center;
+  }
+  .entry-title {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 900;
+    font-size: clamp(24px, 6vw, 38px);
+    letter-spacing: 5px;
+    color: #fff;
+    text-shadow: 0 0 20px var(--purple), 0 0 50px var(--magenta);
+  }
+  .entry-sub {
+    margin-top: 10px;
+    margin-bottom: 26px;
+    font-size: 13px;
+    color: var(--ink-dim);
+    letter-spacing: 1.5px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .theme-card {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: linear-gradient(160deg, rgba(124,77,255,0.14), rgba(224,64,251,0.06) 60%, rgba(10,6,18,0.4));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    padding: 12px;
+  }
+  .theme-card:active { transform: scale(0.96); }
+  .theme-card:hover {
+    box-shadow: 0 0 24px rgba(124,77,255,0.45);
+    border-color: var(--purple);
+  }
+  .theme-card .icon { font-size: 34px; filter: drop-shadow(0 0 10px rgba(245,208,120,0.5)); }
+  .theme-card .name {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 900;
+    font-size: 15px;
+    letter-spacing: 1px;
+    color: #fff;
+  }
+  .theme-card .tag {
+    font-size: 10.5px;
+    color: var(--ink-dim);
+    letter-spacing: 0.5px;
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  .back-row {
+    width: min(88vw, 380px);
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 4px;
+  }
+  .back-btn {
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--ink-dim);
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
 
+<div class="entry-wrap" id="entryScreen">
+  <div class="entry-title">시대별 음악의상 포토부스</div>
+  <div class="entry-sub">시대의 음악을 입다 · 입고 싶은 의상을 골라주세요</div>
+  <div class="card-grid" id="cardGrid"></div>
+</div>
+
+<div id="boothScreen" class="hidden">
+
 <header>
-  <h1>시대별 음악의상 포토부스</h1>
-  <div class="sub">시대의 음악을 입다 · 테마를 고르고, 얼굴을 맞추고, 촬영하세요</div>
+  <h1 id="boothTitle">시대별 음악의상 포토부스</h1>
+  <div class="sub">얼굴을 맞추고, 촬영하세요</div>
 </header>
+
+<div class="back-row">
+  <div class="back-btn" id="backToEntryBtn">← 다른 의상 고르기</div>
+</div>
 
 <div class="theme-bar" id="themeBar"></div>
 
@@ -303,11 +393,15 @@
   카메라가 열리지 않으면, 이 페이지를 실제 배포된 주소(브라우저 탭)에서 열어 카메라 권한을 허용해주세요.
 </footer>
 
+</div><!-- /boothScreen -->
+
 <script>
 const THEMES = [
   {
     id: 'daechwita',
     label: '대취타',
+    icon: '🥁',
+    tag: '조선 행진음악',
     prompt: "Korean Joseon dynasty daechwita royal military parade band, full ensemble of musicians in colorful traditional court costumes, one large drummer playing yonggo drum prominently in the front center facing viewer, painterly digital illustration, dramatic warm lighting, ornate hanbok details, vertical portrait composition, rich color, fantasy epic atmosphere",
     twoPerson: false,
     oval: { ox:50, oy:34, ow:26, oh:22 }
@@ -315,6 +409,8 @@ const THEMES = [
   {
     id: 'joseon-royal',
     label: '조선왕실',
+    icon: '👑',
+    tag: '왕과 왕비 (2인)',
     prompt: "Korean Joseon dynasty king and queen in royal court attire, king wearing gonryongpo dragon robe and black gwanmo crown, queen wearing dangui and jokduri headpiece, standing side by side in a grand palace throne hall, painterly digital illustration, ornate gold embroidery, regal dramatic lighting, vertical portrait composition, rich color, fantasy epic atmosphere",
     twoPerson: true,
     oval:  { ox:34, oy:32, ow:24, oh:20 },
@@ -323,6 +419,8 @@ const THEMES = [
   {
     id: 'jeongak',
     label: '정악의상',
+    icon: '🎼',
+    tag: '궁중 정악 합주',
     prompt: "Korean traditional jeongak court classical music ensemble, musicians in elegant refined court music costumes playing traditional instruments such as piri and daegeum, one performer prominent in front center facing viewer, painterly digital illustration, serene elegant atmosphere, vertical portrait composition, rich color",
     twoPerson: false,
     oval: { ox:50, oy:32, ow:26, oh:22 }
@@ -330,6 +428,8 @@ const THEMES = [
   {
     id: 'sinawi',
     label: '시나위의상',
+    icon: '🪘',
+    tag: '민속 시나위 합주',
     prompt: "Korean traditional sinawi folk shamanic ensemble music performers in vivid folk costumes, dynamic energetic atmosphere, musicians playing janggu drum and piri, one performer prominent in front center facing viewer, painterly digital illustration, vertical portrait composition, vivid saturated color",
     twoPerson: false,
     oval: { ox:50, oy:34, ow:26, oh:22 }
@@ -337,6 +437,8 @@ const THEMES = [
   {
     id: 'silla',
     label: '신라시대의상',
+    icon: '⚜️',
+    tag: '신라 귀족 복식',
     prompt: "Ancient Korean Silla dynasty nobility in traditional silla period royal attire, ornate gold crown and jewelry, elegant flowing robes, standing figure facing viewer, painterly digital illustration, ancient Korean historical atmosphere, vertical portrait composition, rich color",
     twoPerson: false,
     oval: { ox:50, oy:30, ow:26, oh:22 }
@@ -344,6 +446,8 @@ const THEMES = [
   {
     id: 'euro-classical',
     label: '유럽 고전파의상',
+    icon: '🎻',
+    tag: '18세기 유럽 궁정',
     prompt: "European Classical era 18th century courtier in elegant formal attire, powdered wig, ornate embroidered coat, standing portrait facing viewer, painterly digital illustration, Mozart era Vienna salon atmosphere, vertical portrait composition, rich color",
     twoPerson: false,
     oval: { ox:50, oy:32, ow:26, oh:22 }
@@ -364,6 +468,11 @@ THEMES.forEach(t => {
 
 let currentThemeId = THEMES[0].id;
 
+const entryScreen = document.getElementById('entryScreen');
+const boothScreen = document.getElementById('boothScreen');
+const cardGrid = document.getElementById('cardGrid');
+const backToEntryBtn = document.getElementById('backToEntryBtn');
+const boothTitle = document.getElementById('boothTitle');
 const themeBar = document.getElementById('themeBar');
 const stageWrap = document.getElementById('stageWrap');
 const video = document.getElementById('cam');
@@ -405,7 +514,34 @@ THEMES.forEach(t => {
   chip.dataset.id = t.id;
   chip.addEventListener('click', () => selectTheme(t.id));
   themeBar.appendChild(chip);
+
+  const card = document.createElement('div');
+  card.className = 'theme-card';
+  card.innerHTML = `<div class="icon">${t.icon}</div><div class="name">${t.label}</div><div class="tag">${t.tag}</div>`;
+  card.addEventListener('click', () => enterBooth(t.id));
+  cardGrid.appendChild(card);
 });
+
+function enterBooth(id) {
+  selectTheme(id);
+  boothTitle.textContent = themeDef(id).label;
+  entryScreen.classList.add('hidden');
+  boothScreen.classList.remove('hidden');
+  resizeCanvas();
+  startCamera();
+}
+
+function exitBooth() {
+  if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); currentStream = null; }
+  captureBtn.disabled = true;
+  resultBox.classList.remove('show');
+  statusOverlay.style.display = 'flex';
+  statusOverlay.innerHTML = `<div>카메라를 시작해주세요</div><button class="btn" id="startCamBtn" style="width:auto;padding:12px 24px;font-size:14px;">🎥 카메라 시작</button>`;
+  document.getElementById('startCamBtn').addEventListener('click', startCamera);
+  boothScreen.classList.add('hidden');
+  entryScreen.classList.remove('hidden');
+}
+backToEntryBtn.addEventListener('click', exitBooth);
 
 function pollinationsUrl(prompt, seed) {
   const p = encodeURIComponent(prompt);
@@ -578,7 +714,8 @@ async function startCamera() {
     resizeCanvas();
   } catch (err) {
     statusOverlay.style.display = 'flex';
-    statusOverlay.innerHTML = `<div>카메라를 열 수 없어요.<br>브라우저 권한을 허용했는지 확인해주세요.<br><span style="color:#e6a; font-size:11px;">(${err.message})</span></div>`;
+    statusOverlay.innerHTML = `<div>카메라를 열 수 없어요.<br>브라우저 권한을 허용했는지 확인해주세요.<br><span style="color:#e6a; font-size:11px;">(${err.message})</span></div><button class="btn" id="retryCamBtn" style="width:auto;padding:12px 24px;font-size:14px;">🔁 다시 시도</button>`;
+    document.getElementById('retryCamBtn').addEventListener('click', startCamera);
   }
 }
 startCamBtn.addEventListener('click', startCamera);
