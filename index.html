@@ -2,709 +2,780 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>코스튬 포토부스 🎭</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>시대별 음악의상 포토부스</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
+  :root {
+    --bg: #0a0612;
+    --bg2: #150c24;
+    --purple: #7c4dff;
+    --magenta: #e040fb;
+    --gold: #f5d078;
+    --gold-deep: #c8860a;
+    --ink: #ece6ff;
+    --ink-dim: #a99ecb;
+    --line: rgba(124,77,255,0.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #0d0d14;
-    color: #f0f0f8;
+    background: radial-gradient(ellipse at 50% -10%, var(--bg2), var(--bg) 60%);
+    color: var(--ink);
     font-family: 'Noto Sans KR', sans-serif;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 26px 16px 60px;
   }
-
-  /* 헤더 */
-  .header {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border-bottom: 2px solid #7c4dff;
-    padding: 16px 20px;
-    text-align: center;
-  }
-  .header h1 {
+  header { text-align: center; margin-bottom: 18px; }
+  h1 {
     font-family: 'Noto Serif KR', serif;
-    font-size: 20px;
     font-weight: 900;
-    background: linear-gradient(90deg, #7c4dff, #e040fb, #7c4dff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 3px;
+    font-size: clamp(20px, 5vw, 30px);
+    letter-spacing: clamp(1px, 0.6vw, 4px);
+    color: #fff;
+    text-shadow: 0 0 18px var(--purple), 0 0 46px var(--magenta);
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
-  .header p { font-size: 11px; color: #6060a0; margin-top: 3px; letter-spacing: 1px; }
-
-  /* 메인 */
-  .main { max-width: 480px; margin: 0 auto; padding: 20px 16px; }
-
-  /* 카테고리 선택 화면 */
-  #homeScreen { }
-  .home-title {
-    text-align: center;
-    font-family: 'Noto Serif KR', serif;
-    font-size: 15px;
-    color: #a0a0d0;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-    padding-top: 4px;
+  .sub {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--ink-dim);
+    letter-spacing: 1.5px;
   }
 
-  .cat-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
+  .theme-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    width: min(92vw, 420px);
+    padding: 4px 2px 10px;
+    margin-bottom: 8px;
+    scrollbar-width: thin;
   }
-  .cat-card {
-    background: linear-gradient(135deg, #1a1a2e, #0d0d1e);
-    border: 1px solid #2a2a4a;
-    border-radius: 12px;
-    padding: 20px 12px;
-    text-align: center;
+  .theme-chip {
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 9px 15px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(124,77,255,0.06);
+    color: var(--ink-dim);
     cursor: pointer;
-    transition: all 0.25s;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .theme-chip.active {
+    background: linear-gradient(135deg, var(--purple), var(--magenta));
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 0 16px rgba(124,77,255,0.5);
+  }
+
+  .stage-wrap {
     position: relative;
+    width: min(88vw, 380px);
+    aspect-ratio: 3 / 4;
+    border-radius: 18px;
     overflow: hidden;
+    background: #000;
+    box-shadow: 0 0 0 1px var(--line), 0 0 50px rgba(124,77,255,0.35), 0 20px 60px rgba(0,0,0,0.6);
   }
-  .cat-card::before {
-    content: '';
+  #cam {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    background: #050208;
+  }
+  #cam.mirror { transform: scaleX(-1); }
+  #maskCanvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+  }
+  .guide-oval {
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--accent);
-    opacity: 0;
-    transition: opacity 0.25s;
+    border: 2px dashed var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 0 14px rgba(245,208,120,0.6);
+    display: none;
   }
-  .cat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .cat-card:hover::before { opacity: 1; }
-  .cat-emoji { font-size: 36px; display: block; margin-bottom: 8px; }
-  .cat-name {
-    font-family: 'Noto Serif KR', serif;
+  .guide-oval.p2 { border-color: var(--magenta); box-shadow: 0 0 14px rgba(224,64,251,0.6); }
+  .stage-wrap.editing .guide-oval { display: block; }
+
+  .status {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 24px;
     font-size: 13px;
-    font-weight: 700;
-    color: #d0d0f0;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
+    color: var(--ink-dim);
+    background: rgba(5,2,8,0.6);
+    z-index: 5;
   }
-  .cat-desc { font-size: 10px; color: #5050a0; line-height: 1.4; }
+  .status button { pointer-events: auto; }
 
-  .cat-card[data-cat="daechita"] { --accent: #c8860a; }
-  .cat-card[data-cat="joseon"] { --accent: #e040fb; }
-  .cat-card[data-cat="world"] { --accent: #00bcd4; }
-  .cat-card[data-cat="job"] { --accent: #4caf50; }
+  .loading-tag {
+    position: absolute;
+    top: 10px; left: 10px;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.55);
+    color: var(--gold);
+    z-index: 4;
+    display: none;
+  }
+  .loading-tag.show { display: block; }
 
-  /* 부스 화면 */
-  #boothScreen { display: none; }
-
-  /* 뒤로가기 */
-  .back-btn {
+  .panel {
+    width: min(88vw, 380px);
+    margin-top: 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .panel h2 {
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .panel h2.p2label { color: var(--magenta); margin-top: 14px; }
+  .row {
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: none;
-    border: none;
-    color: #6060a0;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 12px;
-    cursor: pointer;
-    padding: 0;
-    margin-bottom: 16px;
-    letter-spacing: 1px;
+    gap: 10px;
+    margin-bottom: 9px;
   }
-  .back-btn:hover { color: #a0a0d0; }
+  .row label { width: 66px; font-size: 12px; color: var(--ink-dim); flex-shrink: 0; }
+  .row input[type=range] { flex: 1; accent-color: var(--purple); }
+  .row.p2 input[type=range] { accent-color: var(--magenta); }
 
-  /* 진행 단계 */
-  .steps {
+  .toggles {
     display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .chip {
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(124,77,255,0.08);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .chip.active { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+  .upload-btn {
+    display: inline-block;
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(245,208,120,0.08);
+    color: var(--gold);
+    cursor: pointer;
+  }
+  input[type=file] { display: none; }
+
+  .actions {
+    width: min(88vw, 380px);
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+  }
+  .btn {
+    flex: 1;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 900;
+    font-size: 16px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    color: #1a0f2e;
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+    box-shadow: 0 8px 24px rgba(245,208,120,0.3);
+  }
+  .btn.secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    box-shadow: none;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .result {
+    display: none;
+    width: min(88vw, 380px);
+    margin-top: 20px;
+    text-align: center;
+  }
+  .result.show { display: block; }
+  .result img {
+    width: 100%;
+    border-radius: 16px;
+    box-shadow: 0 0 0 1px var(--line), 0 0 50px rgba(124,77,255,0.35);
+  }
+  .result .actions { margin-top: 14px; }
+
+  footer {
+    margin-top: 28px;
+    font-size: 11px;
+    color: rgba(169,158,203,0.5);
+    text-align: center;
+    max-width: 340px;
+    line-height: 1.6;
+  }
+
+  /* ── 입구 선택 화면 ── */
+  .hidden { display: none !important; }
+  .entry-wrap {
+    width: min(92vw, 460px);
+    text-align: center;
+  }
+  .entry-title {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 900;
+    font-size: clamp(22px, 5.5vw, 34px);
+    letter-spacing: clamp(1px, 0.8vw, 4px);
+    color: #fff;
+    text-shadow: 0 0 20px var(--purple), 0 0 50px var(--magenta);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+  }
+  .entry-sub {
+    margin-top: 10px;
+    margin-bottom: 26px;
+    font-size: 13px;
+    color: var(--ink-dim);
+    letter-spacing: 1.5px;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .theme-card {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: linear-gradient(160deg, rgba(124,77,255,0.14), rgba(224,64,251,0.06) 60%, rgba(10,6,18,0.4));
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    margin-bottom: 20px;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    padding: 12px;
   }
-  .step {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    color: #3a3a6a;
-    transition: color 0.3s;
+  .theme-card:active { transform: scale(0.96); }
+  .theme-card:hover {
+    box-shadow: 0 0 24px rgba(124,77,255,0.45);
+    border-color: var(--purple);
   }
-  .step.active { color: var(--cat-accent, #7c4dff); }
-  .step.done { color: #5a5a8a; }
-  .step-num {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    border: 1.5px solid currentColor;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 9px; font-weight: 700;
-  }
-  .step-arr { color: #2a2a4a; font-size: 10px; }
-
-  /* 카드 */
-  .card {
-    background: linear-gradient(135deg, #1a1a2e, #0d0d1e);
-    border: 1px solid #2a2a4a;
-    border-radius: 10px;
-    padding: 18px;
-    margin-bottom: 14px;
-    position: relative;
-  }
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--cat-accent, #7c4dff), transparent);
-    border-radius: 10px 10px 0 0;
-  }
-  .card-title {
+  .theme-card .icon { font-size: 34px; filter: drop-shadow(0 0 10px rgba(245,208,120,0.5)); }
+  .theme-card .name {
     font-family: 'Noto Serif KR', serif;
-    font-size: 13px;
-    font-weight: 700;
-    color: #d0d0f8;
+    font-weight: 900;
+    font-size: 15px;
     letter-spacing: 1px;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  /* 버튼 */
-  .btn {
-    width: 100%;
-    padding: 13px;
-    border: none;
-    border-radius: 8px;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all 0.2s;
-    margin-bottom: 8px;
-  }
-  .btn:last-child { margin-bottom: 0; }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--cat-accent, #7c4dff), #b060ff);
     color: #fff;
+    word-break: keep-all;
   }
-  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-  .btn-secondary {
-    background: #1a1a2e;
-    color: #a0a0d0;
-    border: 1px solid #2a2a4a;
-  }
-  .btn-secondary:hover { border-color: var(--cat-accent, #7c4dff); color: #d0d0f8; }
-
-  /* 역할 그리드 */
-  .role-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .role-btn {
-    padding: 12px 8px;
-    background: #0d0d1e;
-    border: 1px solid #2a2a4a;
-    border-radius: 8px;
-    color: #5050a0;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 11px;
-    cursor: pointer;
+  .theme-card .tag {
+    font-size: 10.5px;
+    color: var(--ink-dim);
+    letter-spacing: 0.5px;
     text-align: center;
-    transition: all 0.2s;
     line-height: 1.4;
-  }
-  .role-btn:hover, .role-btn.selected {
-    border-color: var(--cat-accent, #7c4dff);
-    color: #d0d0f8;
-    background: #1a1a2e;
-  }
-  .role-emoji { font-size: 22px; display: block; margin-bottom: 4px; }
-
-  /* 이미지/비디오 */
-  #bgPreview, #video, #mainCanvas {
-    width: 100%;
-    border-radius: 8px;
-    border: 1px solid #2a2a4a;
-    display: none;
-    margin-bottom: 10px;
-  }
-  #video { transform: scaleX(-1); }
-  #mainCanvas { display: block; }
-  .canvas-wrap { display: none; margin-bottom: 10px; }
-
-  /* 로딩 */
-  .loading { text-align: center; padding: 20px; display: none; }
-  .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid #2a2a4a;
-    border-top-color: var(--cat-accent, #7c4dff);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 8px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading p { font-size: 11px; color: #5050a0; }
-
-  /* 슬라이더 */
-  .controls { display: none; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-  .ctrl-row { display: flex; align-items: center; gap: 8px; }
-  .ctrl-label { font-size: 10px; color: #5050a0; width: 56px; flex-shrink: 0; }
-  input[type=range] { flex: 1; accent-color: var(--cat-accent, #7c4dff); }
-  .ctrl-val { font-size: 10px; color: #a0a0d0; width: 28px; text-align: right; }
-
-  /* 힌트 */
-  .hint {
-    background: rgba(124,77,255,0.08);
-    border: 1px solid rgba(124,77,255,0.3);
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 11px;
-    color: #8080c0;
-    line-height: 1.6;
-    margin-bottom: 10px;
-    display: none;
+    word-break: keep-all;
   }
 
-  .save-area { display: none; }
-
-  /* 토스트 */
-  .toast {
-    position: fixed;
-    bottom: 28px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--cat-accent, #7c4dff);
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 20px;
+  .back-row {
+    width: min(88vw, 380px);
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 4px;
+  }
+  .back-btn {
     font-size: 12px;
-    font-weight: 700;
-    opacity: 0;
-    transition: opacity 0.3s;
-    z-index: 999;
-    white-space: nowrap;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--ink-dim);
+    cursor: pointer;
   }
-  .toast.show { opacity: 1; }
-
-  .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>코 스 튬 포 토 부 스</h1>
-  <p>AI 배경 생성 · 얼굴 합성 · 사진 저장</p>
+<div class="entry-wrap" id="entryScreen">
+  <div class="entry-title">시대별 음악의상 포토부스</div>
+  <div class="entry-sub">시대의 음악을 입다 · 입고 싶은 의상을 골라주세요</div>
+  <div class="card-grid" id="cardGrid"></div>
 </div>
 
-<div class="main">
+<div id="boothScreen" class="hidden">
 
-  <!-- 홈 화면 -->
-  <div id="homeScreen">
-    <p class="home-title">🎭 테마를 선택하세요</p>
-    <div class="cat-grid">
-      <div class="cat-card" data-cat="daechita" onclick="startBooth('daechita')">
-        <span class="cat-emoji">🥁</span>
-        <div class="cat-name">대취타</div>
-        <div class="cat-desc">조선 왕실<br>군악 연주단</div>
-      </div>
-      <div class="cat-card" data-cat="joseon" onclick="startBooth('joseon')">
-        <span class="cat-emoji">👑</span>
-        <div class="cat-name">조선 왕실</div>
-        <div class="cat-desc">왕·왕비·대신<br>궁중 코스튬</div>
-      </div>
-      <div class="cat-card" data-cat="world" onclick="startBooth('world')">
-        <span class="cat-emoji">🌍</span>
-        <div class="cat-name">세계 민속의상</div>
-        <div class="cat-desc">각국 전통<br>문화 코스튬</div>
-      </div>
-      <div class="cat-card" data-cat="job" onclick="startBooth('job')">
-        <span class="cat-emoji">🚀</span>
-        <div class="cat-name">직업 체험</div>
-        <div class="cat-desc">우주인·소방관<br>꿈의 직업</div>
-      </div>
-    </div>
-  </div>
+<header>
+  <h1 id="boothTitle">시대별 음악의상 포토부스</h1>
+  <div class="sub">얼굴을 맞추고, 촬영하세요</div>
+</header>
 
-  <!-- 부스 화면 -->
-  <div id="boothScreen">
-    <button class="back-btn" onclick="goHome()">← 테마 선택으로</button>
-
-    <!-- 단계 -->
-    <div class="steps">
-      <div class="step active" id="s1"><div class="step-num">1</div><span>배경</span></div>
-      <div class="step-arr">›</div>
-      <div class="step" id="s2"><div class="step-num">2</div><span>역할</span></div>
-      <div class="step-arr">›</div>
-      <div class="step" id="s3"><div class="step-num">3</div><span>촬영</span></div>
-      <div class="step-arr">›</div>
-      <div class="step" id="s4"><div class="step-num">4</div><span>완성</span></div>
-    </div>
-
-    <!-- STEP 1: 배경 생성 -->
-    <div class="card" id="step1Card">
-      <div class="card-title"><span id="catEmoji">🎨</span> <span id="catName">배경</span> 배경 생성</div>
-      <div class="loading" id="bgLoading"><div class="spinner"></div><p id="bgLoadingMsg">배경 생성 중...</p></div>
-      <img id="bgPreview" alt="배경">
-      <button class="btn btn-primary" id="genBgBtn" onclick="generateBg()">🎨 AI 배경 생성하기</button>
-      <div class="hidden" id="bgDoneArea">
-        <button class="btn btn-secondary" onclick="regenBg()">🔄 다른 배경 생성</button>
-        <button class="btn btn-primary" onclick="goStep2()">다음 →</button>
-      </div>
-    </div>
-
-    <!-- STEP 2: 역할 선택 -->
-    <div class="card hidden" id="step2Card">
-      <div class="card-title">🎭 역할 선택</div>
-      <div class="role-grid" id="roleGrid"></div>
-      <button class="btn btn-primary" onclick="goStep3()">촬영하러 가기 →</button>
-    </div>
-
-    <!-- STEP 3: 촬영 -->
-    <div class="card hidden" id="step3Card">
-      <div class="card-title">📸 얼굴 촬영</div>
-      <div class="loading" id="camLoading"><div class="spinner"></div><p>카메라 준비 중...</p></div>
-      <video id="video" autoplay playsinline></video>
-      <div class="hint" id="faceHint">📍 얼굴이 화면 중앙에 오도록 맞춰주세요!</div>
-      <button class="btn btn-primary hidden" id="captureBtn" onclick="capture()">📸 지금 찍기!</button>
-      <button class="btn btn-secondary" id="startCamBtn" onclick="startCam()">📷 카메라 켜기</button>
-    </div>
-
-    <!-- STEP 4: 완성 -->
-    <div class="card hidden" id="step4Card">
-      <div class="card-title">🎊 완성!</div>
-      <div class="canvas-wrap" id="canvasWrap"><canvas id="mainCanvas"></canvas></div>
-      <div class="controls" id="controls">
-        <div class="ctrl-row">
-          <span class="ctrl-label">크기</span>
-          <input type="range" id="faceSize" min="30" max="200" value="80" oninput="updateDraw()">
-          <span class="ctrl-val" id="faceSizeVal">80</span>
-        </div>
-        <div class="ctrl-row">
-          <span class="ctrl-label">좌우</span>
-          <input type="range" id="faceX" min="-150" max="150" value="0" oninput="updateDraw()">
-          <span class="ctrl-val" id="faceXVal">0</span>
-        </div>
-        <div class="ctrl-row">
-          <span class="ctrl-label">상하</span>
-          <input type="range" id="faceY" min="-150" max="150" value="0" oninput="updateDraw()">
-          <span class="ctrl-val" id="faceYVal">0</span>
-        </div>
-      </div>
-      <div class="save-area" id="saveArea">
-        <button class="btn btn-primary" onclick="saveImg()">💾 이미지 저장</button>
-        <button class="btn btn-secondary" onclick="retake()">🔄 다시 찍기</button>
-        <button class="btn btn-secondary" onclick="goHome()">🏠 처음으로</button>
-      </div>
-    </div>
-  </div>
-
+<div class="back-row">
+  <div class="back-btn" id="backToEntryBtn">← 다른 의상 고르기</div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="theme-bar" id="themeBar"></div>
+
+<div class="stage-wrap" id="stageWrap">
+  <video id="cam" autoplay playsinline muted></video>
+  <canvas id="maskCanvas"></canvas>
+  <div class="loading-tag" id="loadingTag">그림 불러오는 중...</div>
+  <div class="guide-oval" id="guideOval1"></div>
+  <div class="guide-oval p2" id="guideOval2"></div>
+  <div class="status" id="statusOverlay">
+    <div>카메라를 시작해주세요</div>
+    <button class="btn" id="startCamBtn" style="width:auto;padding:12px 24px;font-size:14px;">🎥 카메라 시작</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h2 id="p1Label">얼굴 위치 맞추기</h2>
+  <div class="row"><label>좌우</label><input type="range" id="ox" min="0" max="100" value="50"></div>
+  <div class="row"><label>상하</label><input type="range" id="oy" min="0" max="100" value="34"></div>
+  <div class="row"><label>너비</label><input type="range" id="ow" min="5" max="60" value="26"></div>
+  <div class="row"><label>높이</label><input type="range" id="oh" min="5" max="60" value="22"></div>
+
+  <div id="p2Block" style="display:none;">
+    <h2 class="p2label">인물 2 얼굴 위치</h2>
+    <div class="row p2"><label>좌우</label><input type="range" id="ox2" min="0" max="100" value="70"></div>
+    <div class="row p2"><label>상하</label><input type="range" id="oy2" min="0" max="100" value="34"></div>
+    <div class="row p2"><label>너비</label><input type="range" id="ow2" min="5" max="60" value="26"></div>
+    <div class="row p2"><label>높이</label><input type="range" id="oh2" min="5" max="60" value="22"></div>
+  </div>
+
+  <div class="toggles">
+    <div class="chip active" id="editToggle">📐 위치 조정 중</div>
+    <div class="chip" id="twoPersonToggle">👥 인물 2명</div>
+    <div class="chip" id="mirrorToggle">🪞 좌우반전</div>
+    <div class="chip" id="switchCamBtn">🔄 카메라 전환</div>
+    <label class="upload-btn">
+      🖼️ 이 테마 그림 바꾸기
+      <input type="file" id="fileInput" accept="image/*">
+    </label>
+    <div class="chip" id="rerollBtn">🎲 기본 그림 새로 받기</div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn" id="captureBtn" disabled>📸 촬영</button>
+</div>
+
+<div class="result" id="resultBox">
+  <img id="resultImg" alt="촬영 결과">
+  <div class="actions">
+    <a class="btn" id="downloadBtn" download="costume-photo.jpg" style="text-decoration:none;text-align:center;">💾 저장</a>
+    <button class="btn secondary" id="retakeBtn">다시 찍기</button>
+  </div>
+</div>
+
+<footer>
+  각 테마의 그림은 AI로 생성됩니다. 테마를 바꿔도 이전에 맞춘 얼굴 위치는 테마별로 따로 저장돼요.
+  카메라가 열리지 않으면, 이 페이지를 실제 배포된 주소(브라우저 탭)에서 열어 카메라 권한을 허용해주세요.
+</footer>
+
+</div><!-- /boothScreen -->
 
 <script>
-// ─── 카테고리 데이터 ───────────────────────────────────────────
-const CATS = {
-  daechita: {
-    name: '대취타',
-    emoji: '🥁',
-    accent: '#c8860a',
-    loadingMsg: '조선 왕실 군악대 생성 중...',
-    prompt: 'Korean Joseon dynasty royal military band daechita performance, colorful traditional costumes yellow and red robes, tall pointed hats, holding traditional instruments yonggo drum taepyeongso trumpet nabal horn, royal flags, dramatic blue studio background, wide shot 5 musicians standing in formation, digital illustration vibrant colors, faces clearly visible, high quality',
-    roles: [
-      { id: 'yonggo', emoji: '🥁', name: '용고 연주자', pos: { x: 0.38, y: 0.30, s: 0.12 } },
-      { id: 'taep',   emoji: '🎺', name: '태평소 연주자', pos: { x: 0.55, y: 0.28, s: 0.10 } },
-      { id: 'nabal',  emoji: '📯', name: '나발 연주자', pos: { x: 0.25, y: 0.28, s: 0.10 } },
-      { id: 'flag',   emoji: '🚩', name: '기수', pos: { x: 0.68, y: 0.26, s: 0.10 } },
-    ]
+const THEMES = [
+  {
+    id: 'daechwita',
+    label: '대취타',
+    icon: '🥁',
+    tag: '조선 행진음악',
+    prompt: "Korean Joseon dynasty daechwita royal military parade band, full ensemble of musicians in colorful traditional court costumes, one large drummer playing yonggo drum prominently in the front center facing viewer, painterly digital illustration, dramatic warm lighting, ornate hanbok details, vertical portrait composition, rich color, fantasy epic atmosphere",
+    twoPerson: false,
+    oval: { ox:50, oy:34, ow:26, oh:22 }
   },
-  joseon: {
-    name: '조선 왕실',
-    emoji: '👑',
-    accent: '#e040fb',
-    loadingMsg: '조선 왕실 궁중 장면 생성 중...',
-    prompt: 'Joseon dynasty Korean royal court scene, king sitting on golden throne wearing red royal robe gwa, queen in elegant hanbok, royal court officials in blue and green robes, ornate palace interior with dragon pillars, lanterns, dramatic lighting, digital illustration style, vibrant colors, detailed traditional Korean architecture background, faces clearly visible',
-    roles: [
-      { id: 'king',    emoji: '👑', name: '왕', pos: { x: 0.30, y: 0.28, s: 0.14 } },
-      { id: 'queen',   emoji: '🌸', name: '왕비', pos: { x: 0.55, y: 0.28, s: 0.13 } },
-      { id: 'official',emoji: '📜', name: '대신', pos: { x: 0.70, y: 0.30, s: 0.10 } },
-      { id: 'guard',   emoji: '⚔️', name: '호위무사', pos: { x: 0.15, y: 0.30, s: 0.10 } },
-    ]
+  {
+    id: 'joseon-royal',
+    label: '조선왕실',
+    icon: '👑',
+    tag: '왕과 왕비 (2인)',
+    prompt: "Korean Joseon dynasty king and queen in royal court attire, king wearing gonryongpo dragon robe and black gwanmo crown, queen wearing dangui and jokduri headpiece, standing side by side in a grand palace throne hall, painterly digital illustration, ornate gold embroidery, regal dramatic lighting, vertical portrait composition, rich color, fantasy epic atmosphere",
+    twoPerson: true,
+    oval:  { ox:34, oy:32, ow:24, oh:20 },
+    oval2: { ox:66, oy:32, ow:24, oh:20 }
   },
-  world: {
-    name: '세계 민속의상',
-    emoji: '🌍',
-    accent: '#00bcd4',
-    loadingMsg: '세계 전통의상 장면 생성 중...',
-    prompt: 'World traditional folk costumes celebration, people wearing colorful national costumes from different countries, Japanese kimono, Indian sari, Scottish kilt, Mexican mariachi, African tribal, Arabian thobe, bright festive background with cultural decorations, digital illustration style, vibrant diverse colors, multicultural festival scene, faces clearly visible',
-    roles: [
-      { id: 'japan',  emoji: '🎎', name: '일본 기모노', pos: { x: 0.20, y: 0.28, s: 0.11 } },
-      { id: 'india',  emoji: '🪔', name: '인도 사리', pos: { x: 0.38, y: 0.28, s: 0.11 } },
-      { id: 'mexico', emoji: '🎸', name: '멕시코 마리아치', pos: { x: 0.56, y: 0.28, s: 0.11 } },
-      { id: 'africa', emoji: '🌺', name: '아프리카 전통', pos: { x: 0.74, y: 0.28, s: 0.11 } },
-    ]
+  {
+    id: 'jeongak',
+    label: '정악의상',
+    icon: '🎼',
+    tag: '궁중 정악 합주',
+    prompt: "Korean traditional jeongak court classical music ensemble, musicians in elegant refined court music costumes playing traditional instruments such as piri and daegeum, one performer prominent in front center facing viewer, painterly digital illustration, serene elegant atmosphere, vertical portrait composition, rich color",
+    twoPerson: false,
+    oval: { ox:50, oy:32, ow:26, oh:22 }
   },
-  job: {
-    name: '직업 체험',
-    emoji: '🚀',
-    accent: '#4caf50',
-    loadingMsg: '직업 체험 장면 생성 중...',
-    prompt: 'Dream job careers illustration, astronaut in space suit floating near rocket, firefighter in red uniform with helmet, doctor in white coat with stethoscope, scientist in lab coat with equipment, bright colorful professional backgrounds for each career, digital illustration style, inspirational poster style, faces clearly visible, vibrant colors',
-    roles: [
-      { id: 'astro', emoji: '🚀', name: '우주인', pos: { x: 0.20, y: 0.28, s: 0.13 } },
-      { id: 'fire',  emoji: '🚒', name: '소방관', pos: { x: 0.38, y: 0.28, s: 0.12 } },
-      { id: 'doc',   emoji: '⚕️', name: '의사', pos: { x: 0.56, y: 0.28, s: 0.12 } },
-      { id: 'sci',   emoji: '🔬', name: '과학자', pos: { x: 0.74, y: 0.28, s: 0.12 } },
-    ]
+  {
+    id: 'sinawi',
+    label: '시나위의상',
+    icon: '🪘',
+    tag: '민속 시나위 합주',
+    prompt: "Korean traditional sinawi folk shamanic ensemble music performers in vivid folk costumes, dynamic energetic atmosphere, musicians playing janggu drum and piri, one performer prominent in front center facing viewer, painterly digital illustration, vertical portrait composition, vivid saturated color",
+    twoPerson: false,
+    oval: { ox:50, oy:34, ow:26, oh:22 }
+  },
+  {
+    id: 'silla',
+    label: '신라시대의상',
+    icon: '⚜️',
+    tag: '신라 귀족 복식',
+    prompt: "Ancient Korean Silla dynasty nobility in traditional silla period royal attire, ornate gold crown and jewelry, elegant flowing robes, standing figure facing viewer, painterly digital illustration, ancient Korean historical atmosphere, vertical portrait composition, rich color",
+    twoPerson: false,
+    oval: { ox:50, oy:30, ow:26, oh:22 }
+  },
+  {
+    id: 'euro-classical',
+    label: '유럽 고전파의상',
+    icon: '🎻',
+    tag: '18세기 유럽 궁정',
+    prompt: "European Classical era 18th century courtier in elegant formal attire, powdered wig, ornate embroidered coat, standing portrait facing viewer, painterly digital illustration, Mozart era Vienna salon atmosphere, vertical portrait composition, rich color",
+    twoPerson: false,
+    oval: { ox:50, oy:32, ow:26, oh:22 }
   }
-};
+];
 
-// ─── 상태 ───────────────────────────────────────────────────────
-let curCat = null;
-let bgImg = null;
-let faceImg = null;
-let stream = null;
-let selectedRole = null;
+const state = {};
+THEMES.forEach(t => {
+  state[t.id] = {
+    img: null,
+    customSrc: null,
+    seed: Math.floor(Math.random()*100000),
+    oval: { ...t.oval },
+    oval2: t.oval2 ? { ...t.oval2 } : { ox:70, oy:34, ow:26, oh:22 },
+    twoPerson: t.twoPerson
+  };
+});
 
-// ─── 유틸 ───────────────────────────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+let currentThemeId = THEMES[0].id;
+
+const entryScreen = document.getElementById('entryScreen');
+const boothScreen = document.getElementById('boothScreen');
+const cardGrid = document.getElementById('cardGrid');
+const backToEntryBtn = document.getElementById('backToEntryBtn');
+const boothTitle = document.getElementById('boothTitle');
+const themeBar = document.getElementById('themeBar');
+const stageWrap = document.getElementById('stageWrap');
+const video = document.getElementById('cam');
+const maskCanvas = document.getElementById('maskCanvas');
+const mctx = maskCanvas.getContext('2d');
+const loadingTag = document.getElementById('loadingTag');
+const guideOval1 = document.getElementById('guideOval1');
+const guideOval2 = document.getElementById('guideOval2');
+const statusOverlay = document.getElementById('statusOverlay');
+const startCamBtn = document.getElementById('startCamBtn');
+const captureBtn = document.getElementById('captureBtn');
+const resultBox = document.getElementById('resultBox');
+const resultImg = document.getElementById('resultImg');
+const downloadBtn = document.getElementById('downloadBtn');
+const retakeBtn = document.getElementById('retakeBtn');
+const editToggle = document.getElementById('editToggle');
+const twoPersonToggle = document.getElementById('twoPersonToggle');
+const mirrorToggle = document.getElementById('mirrorToggle');
+const switchCamBtn = document.getElementById('switchCamBtn');
+const fileInput = document.getElementById('fileInput');
+const rerollBtn = document.getElementById('rerollBtn');
+const p2Block = document.getElementById('p2Block');
+const p1Label = document.getElementById('p1Label');
+
+const oxEl = document.getElementById('ox'), oyEl = document.getElementById('oy');
+const owEl = document.getElementById('ow'), ohEl = document.getElementById('oh');
+const ox2El = document.getElementById('ox2'), oy2El = document.getElementById('oy2');
+const ow2El = document.getElementById('ow2'), oh2El = document.getElementById('oh2');
+
+let currentStream = null;
+let facingMode = 'user';
+let mirrored = true;
+let editing = true;
+
+THEMES.forEach(t => {
+  const chip = document.createElement('div');
+  chip.className = 'theme-chip' + (t.id === currentThemeId ? ' active' : '');
+  chip.textContent = t.label;
+  chip.dataset.id = t.id;
+  chip.addEventListener('click', () => selectTheme(t.id));
+  themeBar.appendChild(chip);
+
+  const card = document.createElement('div');
+  card.className = 'theme-card';
+  card.innerHTML = `<div class="icon">${t.icon}</div><div class="name">${t.label}</div><div class="tag">${t.tag}</div>`;
+  card.addEventListener('click', () => enterBooth(t.id));
+  cardGrid.appendChild(card);
+});
+
+function enterBooth(id) {
+  selectTheme(id);
+  boothTitle.textContent = themeDef(id).label;
+  entryScreen.classList.add('hidden');
+  boothScreen.classList.remove('hidden');
+  resizeCanvas();
+  startCamera();
 }
 
-function setStep(n) {
-  for (let i = 1; i <= 4; i++) {
-    const s = document.getElementById('s' + i);
-    s.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
-  }
+function exitBooth() {
+  if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); currentStream = null; }
+  captureBtn.disabled = true;
+  resultBox.classList.remove('show');
+  statusOverlay.style.display = 'flex';
+  statusOverlay.innerHTML = `<div>카메라를 시작해주세요</div><button class="btn" id="startCamBtn" style="width:auto;padding:12px 24px;font-size:14px;">🎥 카메라 시작</button>`;
+  document.getElementById('startCamBtn').addEventListener('click', startCamera);
+  boothScreen.classList.add('hidden');
+  entryScreen.classList.remove('hidden');
+}
+backToEntryBtn.addEventListener('click', exitBooth);
+
+function pollinationsUrl(prompt, seed) {
+  const p = encodeURIComponent(prompt);
+  return `https://image.pollinations.ai/prompt/${p}?width=900&height=1200&nologo=true&seed=${seed}`;
 }
 
-function setCatAccent(accent) {
-  document.documentElement.style.setProperty('--cat-accent', accent);
-}
+function themeDef(id) { return THEMES.find(t => t.id === id); }
 
-// ─── 홈 / 부스 전환 ─────────────────────────────────────────────
-function startBooth(cat) {
-  curCat = CATS[cat];
-  setCatAccent(curCat.accent);
-
-  document.getElementById('catEmoji').textContent = curCat.emoji;
-  document.getElementById('catName').textContent = curCat.name;
-  document.getElementById('bgLoadingMsg').textContent = curCat.loadingMsg;
-
-  // 역할 그리드 생성
-  const grid = document.getElementById('roleGrid');
-  grid.innerHTML = '';
-  selectedRole = curCat.roles[0];
-  curCat.roles.forEach((r, i) => {
-    const btn = document.createElement('div');
-    btn.className = 'role-btn' + (i === 0 ? ' selected' : '');
-    btn.innerHTML = `<span class="role-emoji">${r.emoji}</span>${r.name}`;
-    btn.onclick = () => {
-      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedRole = r;
-    };
-    grid.appendChild(btn);
-  });
-
-  // 초기화
-  bgImg = null; faceImg = null;
-  document.getElementById('bgPreview').style.display = 'none';
-  document.getElementById('bgPreview').src = '';
-  document.getElementById('genBgBtn').style.display = 'block';
-  document.getElementById('genBgBtn').disabled = false;
-  document.getElementById('bgDoneArea').classList.add('hidden');
-  document.getElementById('bgLoading').style.display = 'none';
-
-  ['step2Card','step3Card','step4Card'].forEach(id => document.getElementById(id).classList.add('hidden'));
-  document.getElementById('step1Card').classList.remove('hidden');
-  setStep(1);
-
-  document.getElementById('homeScreen').style.display = 'none';
-  document.getElementById('boothScreen').style.display = 'block';
-}
-
-function goHome() {
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-  document.getElementById('boothScreen').style.display = 'none';
-  document.getElementById('homeScreen').style.display = 'block';
-}
-
-// ─── STEP 1: 배경 생성 ──────────────────────────────────────────
-async function generateBg() {
-  document.getElementById('genBgBtn').disabled = true;
-  document.getElementById('bgLoading').style.display = 'block';
-  document.getElementById('bgPreview').style.display = 'none';
-  document.getElementById('bgDoneArea').classList.add('hidden');
-
-  const seed = Math.floor(Math.random() * 99999);
-  const prompt = encodeURIComponent(curCat.prompt);
-  const url = `https://image.pollinations.ai/prompt/${prompt}?width=800&height=500&seed=${seed}&nologo=true`;
-
+function ensureImageLoaded(id, force) {
+  const s = state[id];
+  if (s.img && !force) { if (id === currentThemeId) drawMask(); return; }
+  const url = s.customSrc || pollinationsUrl(themeDef(id).prompt, s.seed);
+  if (id === currentThemeId) { loadingTag.classList.add('show'); }
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
-    bgImg = img;
-    const preview = document.getElementById('bgPreview');
-    preview.src = url;
-    preview.style.display = 'block';
-    document.getElementById('bgLoading').style.display = 'none';
-    document.getElementById('genBgBtn').style.display = 'none';
-    document.getElementById('bgDoneArea').classList.remove('hidden');
-    showToast('배경 생성 완료! ✨');
+    s.img = img;
+    if (id === currentThemeId) { loadingTag.classList.remove('show'); drawMask(); }
   };
   img.onerror = () => {
-    bgImg = img;
-    const preview = document.getElementById('bgPreview');
-    preview.src = url;
-    preview.style.display = 'block';
-    document.getElementById('bgLoading').style.display = 'none';
-    document.getElementById('genBgBtn').style.display = 'none';
-    document.getElementById('bgDoneArea').classList.remove('hidden');
+    if (id === currentThemeId) loadingTag.classList.remove('show');
+    console.warn('이미지를 불러오지 못했습니다:', url);
   };
   img.src = url;
 }
 
-function regenBg() {
-  document.getElementById('genBgBtn').style.display = 'block';
-  document.getElementById('genBgBtn').disabled = false;
-  document.getElementById('bgPreview').style.display = 'none';
-  document.getElementById('bgDoneArea').classList.add('hidden');
-  generateBg();
+function selectTheme(id) {
+  currentThemeId = id;
+  document.querySelectorAll('.theme-chip').forEach(c => c.classList.toggle('active', c.dataset.id === id));
+
+  const s = state[id];
+  oxEl.value = s.oval.ox; oyEl.value = s.oval.oy; owEl.value = s.oval.ow; ohEl.value = s.oval.oh;
+  ox2El.value = s.oval2.ox; oy2El.value = s.oval2.oy; ow2El.value = s.oval2.ow; oh2El.value = s.oval2.oh;
+
+  twoPersonToggle.classList.toggle('active', s.twoPerson);
+  p2Block.style.display = s.twoPerson ? 'block' : 'none';
+  p1Label.textContent = s.twoPerson ? '인물 1 얼굴 위치' : '얼굴 위치 맞추기';
+
+  ensureImageLoaded(id, false);
+  updateGuideOvals();
 }
 
-function goStep2() {
-  document.getElementById('step1Card').classList.add('hidden');
-  document.getElementById('step2Card').classList.remove('hidden');
-  setStep(2);
+ensureImageLoaded(currentThemeId, false);
+
+rerollBtn.addEventListener('click', () => {
+  const s = state[currentThemeId];
+  s.customSrc = null;
+  s.seed = Math.floor(Math.random()*100000);
+  ensureImageLoaded(currentThemeId, true);
+});
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const s = state[currentThemeId];
+    s.customSrc = ev.target.result;
+    ensureImageLoaded(currentThemeId, true);
+  };
+  reader.readAsDataURL(file);
+});
+
+function resizeCanvas() {
+  const rect = stageWrap.getBoundingClientRect();
+  maskCanvas.width = rect.width;
+  maskCanvas.height = rect.height;
+  drawMask();
+  updateGuideOvals();
+}
+window.addEventListener('resize', resizeCanvas);
+
+function readOvalFromInputs() {
+  const s = state[currentThemeId];
+  s.oval = { ox:+oxEl.value, oy:+oyEl.value, ow:+owEl.value, oh:+ohEl.value };
+  s.oval2 = { ox:+ox2El.value, oy:+oy2El.value, ow:+ow2El.value, oh:+oh2El.value };
 }
 
-// ─── STEP 3: 카메라 ─────────────────────────────────────────────
-function goStep3() {
-  document.getElementById('step2Card').classList.add('hidden');
-  document.getElementById('step3Card').classList.remove('hidden');
-  setStep(3);
+function ovalToPct(o) {
+  return { cxPct:o.ox/100, cyPct:o.oy/100, rxPct:o.ow/100/2, ryPct:o.oh/100/2 };
 }
 
-async function startCam() {
-  document.getElementById('camLoading').style.display = 'block';
-  document.getElementById('startCamBtn').style.display = 'none';
+function drawMask() {
+  const w = maskCanvas.width, h = maskCanvas.height;
+  if (!w || !h) return;
+  mctx.clearRect(0, 0, w, h);
+  const s = state[currentThemeId];
+  if (s.img) drawCover(mctx, s.img, w, h);
+
+  const ovals = [s.oval];
+  if (s.twoPerson) ovals.push(s.oval2);
+
+  mctx.globalCompositeOperation = 'destination-out';
+  ovals.forEach(o => {
+    const { cxPct, cyPct, rxPct, ryPct } = ovalToPct(o);
+    mctx.beginPath();
+    mctx.ellipse(w*cxPct, h*cyPct, w*rxPct, h*ryPct, 0, 0, Math.PI*2);
+    mctx.fill();
+  });
+  mctx.globalCompositeOperation = 'source-over';
+}
+
+function drawCover(ctx, img, targetW, targetH) {
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const scale = Math.max(targetW / iw, targetH / ih);
+  const sw = targetW / scale, sh = targetH / scale;
+  const sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+}
+
+function updateGuideOvals() {
+  const s = state[currentThemeId];
+  const w = stageWrap.clientWidth, h = stageWrap.clientHeight;
+
+  const place = (el, o) => {
+    const { cxPct, cyPct, rxPct, ryPct } = ovalToPct(o);
+    el.style.left = ((cxPct - rxPct) * w) + 'px';
+    el.style.top = ((cyPct - ryPct) * h) + 'px';
+    el.style.width = (rxPct*2*w) + 'px';
+    el.style.height = (ryPct*2*h) + 'px';
+  };
+  place(guideOval1, s.oval);
+  guideOval2.style.display = s.twoPerson ? 'block' : 'none';
+  if (s.twoPerson) place(guideOval2, s.oval2);
+}
+
+[oxEl, oyEl, owEl, ohEl, ox2El, oy2El, ow2El, oh2El].forEach(el => el.addEventListener('input', () => {
+  readOvalFromInputs();
+  drawMask();
+  updateGuideOvals();
+}));
+
+editToggle.addEventListener('click', () => {
+  editing = !editing;
+  stageWrap.classList.toggle('editing', editing);
+  editToggle.classList.toggle('active', editing);
+  editToggle.textContent = editing ? '📐 위치 조정 중' : '📐 위치 조정 끄기';
+});
+stageWrap.classList.add('editing');
+
+twoPersonToggle.addEventListener('click', () => {
+  const s = state[currentThemeId];
+  s.twoPerson = !s.twoPerson;
+  twoPersonToggle.classList.toggle('active', s.twoPerson);
+  p2Block.style.display = s.twoPerson ? 'block' : 'none';
+  p1Label.textContent = s.twoPerson ? '인물 1 얼굴 위치' : '얼굴 위치 맞추기';
+  drawMask();
+  updateGuideOvals();
+});
+
+mirrorToggle.addEventListener('click', () => {
+  mirrored = !mirrored;
+  video.classList.toggle('mirror', mirrored);
+  mirrorToggle.classList.toggle('active', mirrored);
+});
+video.classList.add('mirror');
+mirrorToggle.classList.add('active');
+
+async function startCamera() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-    const video = document.getElementById('video');
+    if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 900 }, height: { ideal: 1200 } },
+      audio: false
+    });
+    currentStream = stream;
     video.srcObject = stream;
-    video.style.display = 'block';
-    document.getElementById('camLoading').style.display = 'none';
-    document.getElementById('captureBtn').classList.remove('hidden');
-    document.getElementById('faceHint').style.display = 'block';
-  } catch(e) {
-    document.getElementById('camLoading').style.display = 'none';
-    document.getElementById('startCamBtn').style.display = 'block';
-    showToast('카메라 권한을 허용해주세요.');
+    statusOverlay.style.display = 'none';
+    captureBtn.disabled = false;
+    resizeCanvas();
+  } catch (err) {
+    statusOverlay.style.display = 'flex';
+    statusOverlay.innerHTML = `<div>카메라를 열 수 없어요.<br>브라우저 권한을 허용했는지 확인해주세요.<br><span style="color:#e6a; font-size:11px;">(${err.message})</span></div><button class="btn" id="retryCamBtn" style="width:auto;padding:12px 24px;font-size:14px;">🔁 다시 시도</button>`;
+    document.getElementById('retryCamBtn').addEventListener('click', startCamera);
   }
 }
+startCamBtn.addEventListener('click', startCamera);
 
-function capture() {
-  const video = document.getElementById('video');
-  const fc = document.createElement('canvas');
-  fc.width = video.videoWidth;
-  fc.height = video.videoHeight;
-  const ctx = fc.getContext('2d');
-  ctx.translate(fc.width, 0); ctx.scale(-1, 1);
-  ctx.drawImage(video, 0, 0);
+switchCamBtn.addEventListener('click', () => {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  startCamera();
+});
 
-  faceImg = new Image();
-  faceImg.src = fc.toDataURL('image/png');
-  faceImg.onload = () => {
-    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-    document.getElementById('video').style.display = 'none';
-    document.getElementById('step3Card').classList.add('hidden');
-    document.getElementById('step4Card').classList.remove('hidden');
-    document.getElementById('canvasWrap').style.display = 'block';
-    document.getElementById('controls').style.display = 'flex';
-    document.getElementById('saveArea').style.display = 'block';
-    document.getElementById('faceSize').value = 80;
-    document.getElementById('faceX').value = 0;
-    document.getElementById('faceY').value = 0;
-    setStep(4);
-    draw();
-  };
-}
+captureBtn.addEventListener('click', () => {
+  const s = state[currentThemeId];
+  const outW = 1080, outH = 1440;
+  const finalCanvas = document.createElement('canvas');
+  finalCanvas.width = outW; finalCanvas.height = outH;
+  const fctx = finalCanvas.getContext('2d');
 
-// ─── STEP 4: 합성 ───────────────────────────────────────────────
-function draw() {
-  const canvas = document.getElementById('mainCanvas');
-  const ctx = canvas.getContext('2d');
-  if (!bgImg || !faceImg) return;
+  fctx.save();
+  if (mirrored) { fctx.translate(outW, 0); fctx.scale(-1, 1); }
+  drawCover(fctx, video, outW, outH);
+  fctx.restore();
 
-  canvas.width = bgImg.naturalWidth || 800;
-  canvas.height = bgImg.naturalHeight || 500;
-  ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+  const illustLayer = document.createElement('canvas');
+  illustLayer.width = outW; illustLayer.height = outH;
+  const lctx = illustLayer.getContext('2d');
+  if (s.img) drawCover(lctx, s.img, outW, outH);
 
-  const pos = selectedRole ? selectedRole.pos : { x: 0.38, y: 0.30, s: 0.12 };
-  const sz = parseInt(document.getElementById('faceSize').value);
-  const dx = parseInt(document.getElementById('faceX').value);
-  const dy = parseInt(document.getElementById('faceY').value);
+  const ovals = [s.oval];
+  if (s.twoPerson) ovals.push(s.oval2);
+  lctx.globalCompositeOperation = 'destination-out';
+  ovals.forEach(o => {
+    const { cxPct, cyPct, rxPct, ryPct } = ovalToPct(o);
+    lctx.beginPath();
+    lctx.ellipse(outW*cxPct, outH*cyPct, outW*rxPct, outH*ryPct, 0, 0, Math.PI*2);
+    lctx.fill();
+  });
 
-  const fW = canvas.width * pos.s * (sz / 80);
-  const fH = fW;
-  const cx = canvas.width * pos.x + dx * 1.5;
-  const cy = canvas.height * pos.y + dy * 1.5;
+  fctx.drawImage(illustLayer, 0, 0);
 
-  const fw = faceImg.naturalWidth, fh = faceImg.naturalHeight;
-  const cropX = fw * 0.15, cropY = fh * 0.05;
-  const cropW = fw * 0.70, cropH = fh * 0.65;
+  const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
+  resultImg.src = dataUrl;
+  downloadBtn.href = dataUrl;
+  const ts = new Date().toISOString().replace(/[:.]/g,'-');
+  downloadBtn.download = `${currentThemeId}-${ts}.jpg`;
+  resultBox.classList.add('show');
+  resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, fW * 0.52, fH * 0.65, 0, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.drawImage(faceImg, cropX, cropY, cropW, cropH,
-    cx - fW * 0.52, cy - fH * 0.65, fW * 1.04, fH * 1.30);
-  ctx.restore();
+retakeBtn.addEventListener('click', () => {
+  resultBox.classList.remove('show');
+});
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, fW * 0.52, fH * 0.65, 0, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.restore();
-}
-
-function updateDraw() {
-  document.getElementById('faceSizeVal').textContent = document.getElementById('faceSize').value;
-  document.getElementById('faceXVal').textContent = document.getElementById('faceX').value;
-  document.getElementById('faceYVal').textContent = document.getElementById('faceY').value;
-  draw();
-}
-
-function saveImg() {
-  draw();
-  const canvas = document.getElementById('mainCanvas');
-  const link = document.createElement('a');
-  link.download = `코스튬포토_${curCat.name}_${Date.now()}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-  showToast('🎊 저장 완료! 패들렛에 올려보세요~');
-}
-
-function retake() {
-  faceImg = null;
-  document.getElementById('step4Card').classList.add('hidden');
-  document.getElementById('step3Card').classList.remove('hidden');
-  document.getElementById('video').style.display = 'none';
-  document.getElementById('captureBtn').classList.add('hidden');
-  document.getElementById('faceHint').style.display = 'none';
-  document.getElementById('startCamBtn').style.display = 'block';
-  document.getElementById('camLoading').style.display = 'none';
-  setStep(3);
-}
+selectTheme(currentThemeId);
+requestAnimationFrame(() => { resizeCanvas(); });
 </script>
 </body>
 </html>
