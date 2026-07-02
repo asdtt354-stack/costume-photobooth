@@ -2,427 +2,454 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>차원의 문 🌀</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>대취타 포토부스 🥁</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg: #0a0612;
+    --bg2: #150c24;
+    --purple: #7c4dff;
+    --magenta: #e040fb;
+    --gold: #f5d078;
+    --gold-deep: #c8860a;
+    --ink: #ece6ff;
+    --ink-dim: #a99ecb;
+    --line: rgba(124,77,255,0.35);
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #000;
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-    cursor: none;
-  }
-  canvas {
-    display: block;
-    width: 100vw;
-    height: 100vh;
-  }
-  .overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    background: radial-gradient(ellipse at 50% -10%, var(--bg2), var(--bg) 60%);
+    color: var(--ink);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 10;
+    padding: 28px 16px 60px;
   }
-  .title {
-    font-family: 'Noto Serif KR', 'Georgia', serif;
-    font-size: clamp(28px, 6vw, 72px);
+  header { text-align: center; margin-bottom: 22px; }
+  h1 {
+    font-family: 'Noto Serif KR', serif;
     font-weight: 900;
-    color: #fff;
-    letter-spacing: 8px;
-    text-shadow:
-      0 0 20px #7c4dff,
-      0 0 40px #7c4dff,
-      0 0 80px #e040fb;
-    animation: pulse 2s ease-in-out infinite;
-    text-align: center;
-    padding: 0 20px;
-  }
-  .subtitle {
-    font-family: 'Noto Serif KR', 'Georgia', serif;
-    font-size: clamp(14px, 2.5vw, 28px);
-    color: #c0a0ff;
-    letter-spacing: 4px;
-    margin-top: 16px;
-    text-shadow: 0 0 20px #7c4dff;
-    animation: pulse 2s ease-in-out infinite 0.5s;
-    text-align: center;
-  }
-  .year {
-    font-family: 'Courier New', monospace;
-    font-size: clamp(36px, 8vw, 100px);
-    font-weight: 900;
-    color: #f5d078;
+    font-size: clamp(22px, 5vw, 34px);
     letter-spacing: 6px;
-    margin-top: 24px;
-    text-shadow:
-      0 0 20px #c8860a,
-      0 0 60px #f5d078;
-    animation: yearFlicker 3s ease-in-out infinite;
+    color: #fff;
+    text-shadow: 0 0 18px var(--purple), 0 0 46px var(--magenta);
   }
-  .bottom-text {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: 'Noto Serif KR', 'Georgia', serif;
-    font-size: clamp(12px, 2vw, 20px);
-    color: rgba(200, 160, 255, 0.7);
-    letter-spacing: 3px;
-    text-align: center;
-    animation: blink 2s ease-in-out infinite;
-    white-space: nowrap;
+  .sub {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--ink-dim);
+    letter-spacing: 2px;
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 0.8; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.03); }
+  .stage-wrap {
+    position: relative;
+    width: min(88vw, 380px);
+    aspect-ratio: 3 / 4;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 0 0 1px var(--line), 0 0 50px rgba(124,77,255,0.35), 0 20px 60px rgba(0,0,0,0.6);
   }
-  @keyframes yearFlicker {
-    0%, 90%, 100% { opacity: 1; }
-    92% { opacity: 0.3; }
-    94% { opacity: 1; }
-    96% { opacity: 0.5; }
-    98% { opacity: 1; }
+  #cam {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    background: #050208;
   }
-  @keyframes blink {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
+  #cam.mirror { transform: scaleX(-1); }
+  #maskCanvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+  }
+  #guideOval {
+    position: absolute;
+    border: 2px dashed var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 0 14px rgba(245,208,120,0.6);
+    display: none;
+  }
+  .stage-wrap.editing #guideOval { display: block; }
+
+  .status {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 24px;
+    font-size: 13px;
+    color: var(--ink-dim);
+    background: rgba(5,2,8,0.6);
+  }
+  .status button {
+    pointer-events: auto;
+  }
+
+  .panel {
+    width: min(88vw, 380px);
+    margin-top: 18px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .panel h2 {
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .row label { width: 66px; font-size: 12px; color: var(--ink-dim); flex-shrink: 0; }
+  .row input[type=range] {
+    flex: 1;
+    accent-color: var(--purple);
+  }
+  .toggles {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .chip {
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(124,77,255,0.08);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .chip.active { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+  .upload-btn {
+    display: inline-block;
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(245,208,120,0.08);
+    color: var(--gold);
+    cursor: pointer;
+  }
+  input[type=file] { display: none; }
+
+  .actions {
+    width: min(88vw, 380px);
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+  }
+  .btn {
+    flex: 1;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 900;
+    font-size: 16px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    color: #1a0f2e;
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+    box-shadow: 0 8px 24px rgba(245,208,120,0.3);
+  }
+  .btn.secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    box-shadow: none;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .result {
+    display: none;
+    width: min(88vw, 380px);
+    margin-top: 22px;
+    text-align: center;
+  }
+  .result.show { display: block; }
+  .result img {
+    width: 100%;
+    border-radius: 16px;
+    box-shadow: 0 0 0 1px var(--line), 0 0 50px rgba(124,77,255,0.35);
+  }
+  .result .actions { margin-top: 14px; }
+
+  footer {
+    margin-top: 30px;
+    font-size: 11px;
+    color: rgba(169,158,203,0.5);
+    text-align: center;
+    max-width: 340px;
+    line-height: 1.6;
   }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<canvas id="c"></canvas>
+<header>
+  <h1>대취타 포토부스</h1>
+  <div class="sub">얼굴을 맞추고, 촬영하세요</div>
+</header>
 
-<div class="overlay">
-  <div class="title">차 원 의 문</div>
-  <div class="subtitle">조선으로의 문이 열립니다</div>
-  <div class="year" id="yearDisplay">1392</div>
+<div class="stage-wrap" id="stageWrap">
+  <video id="cam" autoplay playsinline muted></video>
+  <canvas id="maskCanvas"></canvas>
+  <div id="guideOval"></div>
+  <div class="status" id="statusOverlay">
+    <div>카메라를 시작해주세요</div>
+    <button class="btn" id="startCamBtn" style="width:auto;padding:12px 24px;font-size:14px;">🎥 카메라 시작</button>
+  </div>
 </div>
 
-<div class="bottom-text">🥁 대취타 코스튬 포토부스 체험존 🥁</div>
+<div class="panel">
+  <h2>얼굴 위치 맞추기</h2>
+  <div class="row"><label>좌우</label><input type="range" id="ox" min="0" max="100" value="50"></div>
+  <div class="row"><label>상하</label><input type="range" id="oy" min="0" max="100" value="34"></div>
+  <div class="row"><label>너비</label><input type="range" id="ow" min="5" max="60" value="26"></div>
+  <div class="row"><label>높이</label><input type="range" id="oh" min="5" max="60" value="22"></div>
+  <div class="toggles">
+    <div class="chip active" id="editToggle">📐 위치 조정 중</div>
+    <div class="chip" id="mirrorToggle">🪞 좌우반전</div>
+    <div class="chip" id="switchCamBtn">🔄 카메라 전환</div>
+    <label class="upload-btn">
+      🖼️ 그림 바꾸기
+      <input type="file" id="fileInput" accept="image/*">
+    </label>
+    <div class="chip" id="rerollBtn">🎲 기본 그림 새로 받기</div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn" id="captureBtn" disabled>📸 촬영</button>
+</div>
+
+<div class="result" id="resultBox">
+  <img id="resultImg" alt="촬영 결과">
+  <div class="actions">
+    <a class="btn" id="downloadBtn" download="daechwita-photo.jpg" style="text-decoration:none;text-align:center;">💾 저장</a>
+    <button class="btn secondary" id="retakeBtn">다시 찍기</button>
+  </div>
+</div>
+
+<footer>
+  기본 그림은 AI로 생성된 이미지입니다. 슬라이더로 얼굴 구멍 위치를 먼저 맞춘 뒤 촬영하세요.
+  카메라가 열리지 않으면, 이 페이지를 실제 브라우저 탭(배포된 주소)에서 열어 카메라 권한을 허용해주세요.
+</footer>
 
 <script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
+const stageWrap = document.getElementById('stageWrap');
+const video = document.getElementById('cam');
+const maskCanvas = document.getElementById('maskCanvas');
+const mctx = maskCanvas.getContext('2d');
+const guideOval = document.getElementById('guideOval');
+const statusOverlay = document.getElementById('statusOverlay');
+const startCamBtn = document.getElementById('startCamBtn');
+const captureBtn = document.getElementById('captureBtn');
+const resultBox = document.getElementById('resultBox');
+const resultImg = document.getElementById('resultImg');
+const downloadBtn = document.getElementById('downloadBtn');
+const retakeBtn = document.getElementById('retakeBtn');
+const editToggle = document.getElementById('editToggle');
+const mirrorToggle = document.getElementById('mirrorToggle');
+const switchCamBtn = document.getElementById('switchCamBtn');
+const fileInput = document.getElementById('fileInput');
+const rerollBtn = document.getElementById('rerollBtn');
 
-let W, H, cx, cy;
+const oxEl = document.getElementById('ox');
+const oyEl = document.getElementById('oy');
+const owEl = document.getElementById('ow');
+const ohEl = document.getElementById('oh');
 
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-  cx = W / 2;
-  cy = H / 2;
+let currentStream = null;
+let facingMode = 'user';
+let mirrored = true;
+let editing = true;
+let illustration = new Image();
+illustration.crossOrigin = 'anonymous';
+
+const DAECHWITA_PROMPT = "Korean Joseon dynasty daechwita royal military parade band, full ensemble of musicians in colorful traditional court costumes, one large drummer playing yonggo drum prominently in the front center facing viewer, painterly digital illustration, dramatic warm lighting, ornate hanbok details, vertical portrait composition, rich color, fantasy epic atmosphere";
+
+function pollinationsUrl(seed) {
+  const p = encodeURIComponent(DAECHWITA_PROMPT);
+  return `https://image.pollinations.ai/prompt/${p}?width=900&height=1200&nologo=true&seed=${seed}`;
 }
-resize();
-window.addEventListener('resize', resize);
 
-let t = 0;
+function loadIllustration(url) {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => { illustration = img; drawMask(); };
+  img.onerror = () => { console.warn('이미지를 불러오지 못했습니다:', url); };
+  img.src = url;
+}
 
-// 파티클
-const particles = Array.from({length: 200}, () => ({
-  angle: Math.random() * Math.PI * 2,
-  radius: Math.random() * 0.8 + 0.1,
-  speed: Math.random() * 0.02 + 0.005,
-  size: Math.random() * 3 + 1,
-  color: Math.random() < 0.5
-    ? `hsl(${260 + Math.random()*40}, 100%, ${60 + Math.random()*30}%)`
-    : `hsl(${40 + Math.random()*20}, 100%, ${60 + Math.random()*30}%)`,
-  life: Math.random()
+loadIllustration(pollinationsUrl(Math.floor(Math.random()*100000)));
+
+rerollBtn.addEventListener('click', () => {
+  loadIllustration(pollinationsUrl(Math.floor(Math.random()*100000)));
+});
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => loadIllustration(ev.target.result);
+  reader.readAsDataURL(file);
+});
+
+function resizeCanvas() {
+  const rect = stageWrap.getBoundingClientRect();
+  maskCanvas.width = rect.width;
+  maskCanvas.height = rect.height;
+  drawMask();
+  updateGuideOval();
+}
+window.addEventListener('resize', resizeCanvas);
+
+function getOvalParams() {
+  return {
+    cxPct: parseFloat(oxEl.value) / 100,
+    cyPct: parseFloat(oyEl.value) / 100,
+    rxPct: parseFloat(owEl.value) / 100 / 2,
+    ryPct: parseFloat(ohEl.value) / 100 / 2,
+  };
+}
+
+function drawMask() {
+  const w = maskCanvas.width, h = maskCanvas.height;
+  if (!w || !h) return;
+  mctx.clearRect(0, 0, w, h);
+  if (illustration.complete && illustration.naturalWidth) {
+    drawCover(mctx, illustration, w, h);
+  }
+  const { cxPct, cyPct, rxPct, ryPct } = getOvalParams();
+  mctx.globalCompositeOperation = 'destination-out';
+  mctx.beginPath();
+  mctx.ellipse(w*cxPct, h*cyPct, w*rxPct, h*ryPct, 0, 0, Math.PI*2);
+  mctx.fill();
+  mctx.globalCompositeOperation = 'source-over';
+}
+
+function drawCover(ctx, img, targetW, targetH) {
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const scale = Math.max(targetW / iw, targetH / ih);
+  const sw = targetW / scale, sh = targetH / scale;
+  const sx = (iw - sw) / 2, sy = (ih - sh) / 2;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+}
+
+function updateGuideOval() {
+  const { cxPct, cyPct, rxPct, ryPct } = getOvalParams();
+  const w = stageWrap.clientWidth, h = stageWrap.clientHeight;
+  const left = (cxPct - rxPct) * w;
+  const top = (cyPct - ryPct) * h;
+  guideOval.style.left = left + 'px';
+  guideOval.style.top = top + 'px';
+  guideOval.style.width = (rxPct*2*w) + 'px';
+  guideOval.style.height = (ryPct*2*h) + 'px';
+}
+
+[oxEl, oyEl, owEl, ohEl].forEach(el => el.addEventListener('input', () => {
+  drawMask();
+  updateGuideOval();
 }));
 
-function drawWarp() {
-  // 배경
-  ctx.fillStyle = 'rgba(0,0,0,0.15)';
-  ctx.fillRect(0, 0, W, H);
-
-  const maxR = Math.min(W, H) * 0.48;
-
-  // 소용돌이 링들
-  for (let i = 0; i < 12; i++) {
-    const phase = t * (0.3 + i * 0.08) + i * 0.5;
-    const r = maxR * (0.15 + i * 0.072) * (0.9 + Math.sin(t * 0.5 + i) * 0.1);
-    const hue = 260 + i * 8 + Math.sin(t + i) * 20;
-    const alpha = 0.3 + Math.sin(t * 0.7 + i * 0.4) * 0.2;
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.strokeStyle = `hsla(${hue}, 100%, 65%, ${alpha})`;
-    ctx.lineWidth = 1.5 + Math.sin(t + i) * 0.8;
-    ctx.stroke();
-  }
-
-  // 나선 팔
-  for (let arm = 0; arm < 3; arm++) {
-    const armOffset = (arm / 3) * Math.PI * 2;
-    ctx.beginPath();
-    for (let s = 0; s < 300; s++) {
-      const progress = s / 300;
-      const angle = progress * Math.PI * 8 + t * 1.2 + armOffset;
-      const r = progress * maxR;
-      const x = cx + Math.cos(angle) * r;
-      const y = cy + Math.sin(angle) * r;
-      const hue = 260 + progress * 80 + arm * 40;
-      if (s === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = `hsla(${260 + arm * 40}, 90%, 65%, 0.25)`;
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-  }
-
-  // 중앙 포털 글로우
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR * 0.35);
-  grad.addColorStop(0, `hsla(280, 100%, 90%, ${0.6 + Math.sin(t) * 0.2})`);
-  grad.addColorStop(0.3, `hsla(260, 100%, 60%, ${0.3 + Math.sin(t * 0.7) * 0.1})`);
-  grad.addColorStop(0.7, `hsla(240, 100%, 40%, 0.1)`);
-  grad.addColorStop(1, 'hsla(240, 100%, 20%, 0)');
-  ctx.beginPath();
-  ctx.arc(cx, cy, maxR * 0.35, 0, Math.PI * 2);
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // 파티클 (별빛)
-  particles.forEach(p => {
-    p.life += p.speed;
-    if (p.life > 1) { p.life = 0; p.angle = Math.random() * Math.PI * 2; }
-
-    const eased = Math.pow(p.life, 0.6);
-    const r = eased * maxR * p.radius;
-    const swirl = p.angle + eased * Math.PI * 6 + t * 0.5;
-    const x = cx + Math.cos(swirl) * r;
-    const y = cy + Math.sin(swirl) * r;
-    const alpha = Math.sin(p.life * Math.PI);
-
-    ctx.beginPath();
-    ctx.arc(x, y, p.size * (1 - eased * 0.5), 0, Math.PI * 2);
-    ctx.fillStyle = p.color.replace(')', `, ${alpha})`).replace('hsl(', 'hsla(');
-    ctx.fill();
-  });
-
-  // 빛줄기
-  for (let i = 0; i < 16; i++) {
-    const angle = (i / 16) * Math.PI * 2 + t * 0.3;
-    const len = maxR * (0.4 + Math.sin(t * 0.8 + i * 0.4) * 0.15);
-    const x1 = cx + Math.cos(angle) * maxR * 0.05;
-    const y1 = cy + Math.sin(angle) * maxR * 0.05;
-    const x2 = cx + Math.cos(angle) * len;
-    const y2 = cy + Math.sin(angle) * len;
-
-    const lineGrad = ctx.createLinearGradient(x1, y1, x2, y2);
-    lineGrad.addColorStop(0, `hsla(280, 100%, 80%, 0.4)`);
-    lineGrad.addColorStop(1, `hsla(260, 100%, 60%, 0)`);
-
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.strokeStyle = lineGrad;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  // 외곽 비네트
-  const vignette = ctx.createRadialGradient(cx, cy, maxR * 0.5, cx, cy, Math.max(W, H) * 0.8);
-  vignette.addColorStop(0, 'rgba(0,0,0,0)');
-  vignette.addColorStop(1, 'rgba(0,0,10,0.85)');
-  ctx.fillStyle = vignette;
-  ctx.fillRect(0, 0, W, H);
-
-  t += 0.018;
-}
-
-// 연도 카운트다운 애니메이션
-let yearT = 0;
-const startYear = 2026;
-const endYear = 1392;
-function updateYear() {
-  yearT += 0.003;
-  const progress = (Math.sin(yearT) + 1) / 2;
-  const year = Math.round(startYear - (startYear - endYear) * progress);
-  document.getElementById('yearDisplay').textContent = year;
-}
-
-function loop() {
-  drawWarp();
-  updateYear();
-  requestAnimationFrame(loop);
-}
-loop();
-
-// ─── Web Audio 워프 효과음 ───────────────────────────────────────
-let audioCtx = null;
-let audioStarted = false;
-
-function startAudio() {
-  if (audioStarted) return;
-  audioStarted = true;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-  // 1. 깊은 드론 (우웅~ 베이스)
-  function makeDrone(freq, gain, detune = 0) {
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    osc.detune.value = detune;
-    gainNode.gain.value = gain;
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    osc.start();
-    return { osc, gainNode };
-  }
-
-  // 2. LFO로 흔들림 효과
-  function addLFO(target, rate, depth) {
-    const lfo = audioCtx.createOscillator();
-    const lfoGain = audioCtx.createGain();
-    lfo.frequency.value = rate;
-    lfoGain.gain.value = depth;
-    lfo.connect(lfoGain);
-    lfoGain.connect(target);
-    lfo.start();
-  }
-
-  // 3. 리버브 (공간감)
-  function makeReverb() {
-    const convolver = audioCtx.createConvolver();
-    const rate = audioCtx.sampleRate;
-    const len = rate * 4;
-    const buffer = audioCtx.createBuffer(2, len, rate);
-    for (let ch = 0; ch < 2; ch++) {
-      const data = buffer.getChannelData(ch);
-      for (let i = 0; i < len; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
-      }
-    }
-    convolver.buffer = buffer;
-    return convolver;
-  }
-
-  const reverb = makeReverb();
-  const masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.7;
-  reverb.connect(masterGain);
-  masterGain.connect(audioCtx.destination);
-
-  // 드론 레이어들
-  const d1 = makeDrone(55, 0.18);       // 깊은 베이스
-  const d2 = makeDrone(110, 0.10, 3);   // 옥타브 위 + 약간 디튠
-  const d3 = makeDrone(165, 0.06);      // 5도 화음
-  const d4 = makeDrone(220, 0.04, -5);  // 높은 음 + 디튠
-
-  // LFO 흔들림
-  addLFO(d1.osc.frequency, 0.08, 4);
-  addLFO(d2.osc.frequency, 0.13, 3);
-  addLFO(d3.gainNode.gain, 0.2, 0.03);
-
-  // 리버브 연결
-  [d1, d2, d3, d4].forEach(d => d.gainNode.connect(reverb));
-
-  // 4. 신비로운 하이 톤 (반짝반짝)
-  function spawnTone() {
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    const freqs = [440, 528, 660, 880, 1056, 1320];
-    osc.frequency.value = freqs[Math.floor(Math.random() * freqs.length)];
-    osc.type = 'sine';
-    const now = audioCtx.currentTime;
-    g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(0.06, now + 0.3);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-    osc.connect(g);
-    g.connect(reverb);
-    osc.start(now);
-    osc.stop(now + 2.5);
-    setTimeout(spawnTone, 800 + Math.random() * 2000);
-  }
-  spawnTone();
-
-  // 5. 워프 스윕 (주기적으로 우웅~)
-  function warpSweep() {
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    const now = audioCtx.currentTime;
-    osc.frequency.setValueAtTime(40, now);
-    osc.frequency.exponentialRampToValueAtTime(180, now + 3);
-    osc.frequency.exponentialRampToValueAtTime(40, now + 6);
-    g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(0.08, now + 1);
-    g.gain.linearRampToValueAtTime(0.08, now + 5);
-    g.gain.linearRampToValueAtTime(0, now + 6);
-    osc.connect(g);
-    g.connect(reverb);
-    osc.start(now);
-    osc.stop(now + 6.5);
-    setTimeout(warpSweep, 7000 + Math.random() * 3000);
-  }
-  warpSweep();
-}
-
-// 시작 버튼 오버레이
-const startOverlay = document.createElement('div');
-startOverlay.style.cssText = `
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,10,0.85);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  z-index: 100; cursor: pointer;
-`;
-startOverlay.innerHTML = `
-  <div style="
-    font-family: 'Noto Serif KR', Georgia, serif;
-    font-size: clamp(20px, 4vw, 48px);
-    color: #d0a0ff;
-    letter-spacing: 4px;
-    text-shadow: 0 0 30px #7c4dff;
-    margin-bottom: 30px;
-    text-align: center;
-    padding: 0 20px;
-  ">차 원 의 문</div>
-  <div style="
-    padding: 18px 48px;
-    background: linear-gradient(135deg, #7c4dff, #e040fb);
-    border-radius: 50px;
-    font-family: 'Noto Serif KR', Georgia, serif;
-    font-size: clamp(16px, 3vw, 24px);
-    color: white;
-    letter-spacing: 3px;
-    box-shadow: 0 0 40px rgba(124,77,255,0.6);
-    animation: startPulse 1.5s ease-in-out infinite;
-  ">🌀 시작하기</div>
-  <style>
-    @keyframes startPulse {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(124,77,255,0.6); }
-      50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(224,64,251,0.8); }
-    }
-  </style>
-`;
-startOverlay.addEventListener('click', () => {
-  startAudio();
-  startOverlay.style.opacity = '0';
-  startOverlay.style.transition = 'opacity 0.8s';
-  setTimeout(() => startOverlay.remove(), 800);
+editToggle.addEventListener('click', () => {
+  editing = !editing;
+  stageWrap.classList.toggle('editing', editing);
+  editToggle.classList.toggle('active', editing);
+  editToggle.textContent = editing ? '📐 위치 조정 중' : '📐 위치 조정 끄기';
 });
-document.body.appendChild(startOverlay);
+stageWrap.classList.add('editing');
 
-// 전체화면 클릭
-canvas.addEventListener('click', () => {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen?.();
-  } else {
-    document.exitFullscreen?.();
-  }
+mirrorToggle.addEventListener('click', () => {
+  mirrored = !mirrored;
+  video.classList.toggle('mirror', mirrored);
+  mirrorToggle.classList.toggle('active', mirrored);
 });
+video.classList.add('mirror');
+mirrorToggle.classList.add('active');
+
+async function startCamera() {
+  try {
+    if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 900 }, height: { ideal: 1200 } },
+      audio: false
+    });
+    currentStream = stream;
+    video.srcObject = stream;
+    statusOverlay.style.display = 'none';
+    captureBtn.disabled = false;
+    resizeCanvas();
+  } catch (err) {
+    statusOverlay.style.display = 'flex';
+    statusOverlay.innerHTML = `<div>카메라를 열 수 없어요.<br>브라우저 권한을 허용했는지 확인해주세요.<br><span style="color:#e6a; font-size:11px;">(${err.message})</span></div>`;
+  }
+}
+startCamBtn.addEventListener('click', startCamera);
+
+switchCamBtn.addEventListener('click', () => {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  startCamera();
+});
+
+captureBtn.addEventListener('click', () => {
+  const outW = 1080, outH = 1440;
+  const finalCanvas = document.createElement('canvas');
+  finalCanvas.width = outW; finalCanvas.height = outH;
+  const fctx = finalCanvas.getContext('2d');
+
+  // 1. draw current video frame (respecting mirror), cover-fit
+  fctx.save();
+  if (mirrored) {
+    fctx.translate(outW, 0);
+    fctx.scale(-1, 1);
+  }
+  drawCover(fctx, video, outW, outH);
+  fctx.restore();
+
+  // 2. draw illustration-with-hole on top
+  const illustLayer = document.createElement('canvas');
+  illustLayer.width = outW; illustLayer.height = outH;
+  const lctx = illustLayer.getContext('2d');
+  if (illustration.complete && illustration.naturalWidth) {
+    drawCover(lctx, illustration, outW, outH);
+  }
+  const { cxPct, cyPct, rxPct, ryPct } = getOvalParams();
+  lctx.globalCompositeOperation = 'destination-out';
+  lctx.beginPath();
+  lctx.ellipse(outW*cxPct, outH*cyPct, outW*rxPct, outH*ryPct, 0, 0, Math.PI*2);
+  lctx.fill();
+
+  fctx.drawImage(illustLayer, 0, 0);
+
+  const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
+  resultImg.src = dataUrl;
+  downloadBtn.href = dataUrl;
+  const ts = new Date().toISOString().replace(/[:.]/g,'-');
+  downloadBtn.download = `daechwita-${ts}.jpg`;
+  resultBox.classList.add('show');
+  resultBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+retakeBtn.addEventListener('click', () => {
+  resultBox.classList.remove('show');
+});
+
+// init guide once layout settles
+requestAnimationFrame(() => { resizeCanvas(); });
 </script>
 </body>
 </html>
