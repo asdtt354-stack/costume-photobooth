@@ -332,6 +332,42 @@
     color: var(--ink-dim);
     cursor: pointer;
   }
+
+  .settings-link {
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--ink-dim);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .settings-panel {
+    margin-top: 12px;
+    text-align: left;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .settings-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .engine-opt { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink); }
+  .engine-opt input { accent-color: var(--purple); }
+  .key-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(0,0,0,0.3);
+    color: var(--ink);
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .settings-note {
+    font-size: 10.5px;
+    color: rgba(169,158,203,0.7);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
 </style>
 </head>
 <body>
@@ -340,6 +376,27 @@
   <div class="entry-title">시대별 음악의상 포토부스</div>
   <div class="entry-sub">시대의 음악을 입다 · 입고 싶은 의상을 골라주세요</div>
   <div class="card-grid" id="cardGrid"></div>
+  <div class="settings-link" id="settingsToggle">⚙️ 그림 생성 설정</div>
+
+  <div class="settings-panel hidden" id="settingsPanel">
+    <div class="settings-row">
+      <label class="engine-opt">
+        <input type="radio" name="engine" value="pollinations" checked>
+        <span>Pollinations (무료, 기본)</span>
+      </label>
+      <label class="engine-opt">
+        <input type="radio" name="engine" value="gemini">
+        <span>Gemini 2.5 Flash Image (더 정확함, API 키 필요)</span>
+      </label>
+    </div>
+    <div id="geminiKeyRow" class="hidden">
+      <input type="password" id="geminiKeyInput" placeholder="Gemini API 키를 붙여넣으세요" class="key-input">
+      <div class="settings-note">
+        Google AI Studio에서 무료로 발급받을 수 있어요. 이 키는 저장되지 않고 이 브라우저 탭에서만 사용돼요(새로고침하면 다시 입력해야 해요). 배포된 페이지에서는 이 키가 네트워크 요청에 그대로 노출되니, 사용량 제한을 걸어둔 키를 쓰시는 걸 권해요.
+      </div>
+    </div>
+    <div class="chip" id="settingsSaveBtn">저장</div>
+  </div>
 </div>
 
 <div id="boothScreen" class="hidden">
@@ -486,6 +543,37 @@ THEMES.forEach(t => {
 });
 
 let currentThemeId = THEMES[0].id;
+let ENGINE = 'pollinations';
+let GEMINI_KEY = '';
+
+const settingsToggle = document.getElementById('settingsToggle');
+const settingsPanel = document.getElementById('settingsPanel');
+const geminiKeyRow = document.getElementById('geminiKeyRow');
+const geminiKeyInput = document.getElementById('geminiKeyInput');
+const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+
+settingsToggle.addEventListener('click', () => settingsPanel.classList.toggle('hidden'));
+
+document.querySelectorAll('input[name=engine]').forEach(r => {
+  r.addEventListener('change', (e) => {
+    geminiKeyRow.classList.toggle('hidden', e.target.value !== 'gemini');
+  });
+});
+
+settingsSaveBtn.addEventListener('click', () => {
+  const selected = document.querySelector('input[name=engine]:checked').value;
+  ENGINE = selected;
+  GEMINI_KEY = geminiKeyInput.value.trim();
+  settingsPanel.classList.add('hidden');
+  if (ENGINE === 'gemini' && !GEMINI_KEY) {
+    alert('Gemini API 키를 입력해주세요. 키가 없으면 Pollinations로 자동 전환됩니다.');
+    ENGINE = 'pollinations';
+    return;
+  }
+  // 엔진을 바꾸면 모든 테마 이미지를 다시 불러오도록 캐시 초기화
+  THEMES.forEach(t => { state[t.id].img = null; state[t.id].customSrc = null; });
+  ensureImageLoaded(currentThemeId, true);
+});
 
 const entryScreen = document.getElementById('entryScreen');
 const boothScreen = document.getElementById('boothScreen');
@@ -569,23 +657,86 @@ function pollinationsUrl(prompt, seed) {
   return `https://image.pollinations.ai/prompt/${p}?width=900&height=1200&nologo=true&seed=${seed}`;
 }
 
+async function generateWithGemini(prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': GEMINI_KEY
+    },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { responseModalities: ['IMAGE'] }
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Gemini API 오류 (${res.status}): ${errText.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  const imgPart = parts.find(p => p.inlineData || p.inline_data);
+  const inline = imgPart && (imgPart.inlineData || imgPart.inline_data);
+  if (!inline || !inline.data) throw new Error('Gemini 응답에 이미지가 없어요.');
+  const mime = inline.mimeType || inline.mime_type || 'image/png';
+  return `data:${mime};base64,${inline.data}`;
+}
+
 function themeDef(id) { return THEMES.find(t => t.id === id); }
 
 function ensureImageLoaded(id, force) {
   const s = state[id];
   if (s.img && !force) { if (id === currentThemeId) drawMask(); return; }
-  const url = s.customSrc || pollinationsUrl(themeDef(id).prompt, s.seed);
+
   if (id === currentThemeId) { loadingTag.classList.add('show'); }
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
+
+  const finishLoad = (img) => {
     s.img = img;
     if (id === currentThemeId) { loadingTag.classList.remove('show'); drawMask(); }
   };
-  img.onerror = () => {
+  const failLoad = (msg, url) => {
     if (id === currentThemeId) loadingTag.classList.remove('show');
-    console.warn('이미지를 불러오지 못했습니다:', url);
+    console.warn('이미지를 불러오지 못했습니다:', msg, url || '');
   };
+
+  if (s.customSrc) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => finishLoad(img);
+    img.onerror = () => failLoad('custom image load failed');
+    img.src = s.customSrc;
+    return;
+  }
+
+  if (ENGINE === 'gemini' && GEMINI_KEY) {
+    generateWithGemini(themeDef(id).prompt)
+      .then(dataUrl => {
+        const img = new Image();
+        img.onload = () => finishLoad(img);
+        img.onerror = () => failLoad('gemini image decode failed');
+        img.src = dataUrl;
+      })
+      .catch(err => {
+        failLoad(err.message);
+        if (id === currentThemeId) {
+          alert('Gemini 이미지 생성에 실패했어요. Pollinations로 대신 불러올게요.\n' + err.message);
+        }
+        const url = pollinationsUrl(themeDef(id).prompt, s.seed);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => finishLoad(img);
+        img.onerror = () => failLoad('pollinations fallback failed', url);
+        img.src = url;
+      });
+    return;
+  }
+
+  const url = pollinationsUrl(themeDef(id).prompt, s.seed);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => finishLoad(img);
+  img.onerror = () => failLoad('pollinations load failed', url);
   img.src = url;
 }
 
@@ -666,7 +817,9 @@ function drawMask() {
 }
 
 function drawCover(ctx, img, targetW, targetH) {
-  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const iw = img.videoWidth || img.naturalWidth || img.width;
+  const ih = img.videoHeight || img.naturalHeight || img.height;
+  if (!iw || !ih) return;
   const scale = Math.max(targetW / iw, targetH / ih);
   const sw = targetW / scale, sh = targetH / scale;
   const sx = (iw - sw) / 2, sy = (ih - sh) / 2;
