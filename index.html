@@ -214,7 +214,7 @@ input[type=range]{width:100%}.note{font-size:12px;color:#bbb;line-height:1.45;ma
 
 <section class="panel capturePanel" id="capturePanel">
   <div class="row">
-    <button id="openCameraBtn" class="yellow primaryAction">📷 사진 촬영</button>
+    <button id="openCameraBtn" class="yellow primaryAction" type="button" aria-disabled="false">📷 사진 촬영</button>
     
   </div>
   <div class="status" id="status">촬영 준비 완료</div>
@@ -274,8 +274,24 @@ input[type=range]{width:100%}.note{font-size:12px;color:#bbb;line-height:1.45;ma
   </div>
 </div>
 
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  const openBtn=document.getElementById("openCameraBtn");
+  const modeModal=document.getElementById("modeModal");
+  if(openBtn && modeModal){
+    openBtn.disabled=false;
+    openBtn.style.pointerEvents="auto";
+    openBtn.addEventListener("click",()=>{
+      modeModal.classList.add("show");
+      modeModal.setAttribute("aria-hidden","false");
+      document.body.style.overflow="hidden";
+    });
+  }
+});
+</script>
+
 <script type="module">
-import {FaceDetector,FilesetResolver} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
 const COSTUMES = [
   {
     id:"yonggo",
@@ -323,10 +339,23 @@ selectCostume(COSTUMES[0]);
 
 async function init(){
  try{
+  // 얼굴 인식 라이브러리는 나중에 불러옵니다.
+  // 로딩 실패 여부와 관계없이 촬영 버튼은 항상 작동합니다.
+  const visionTasks=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+  const {FaceDetector,FilesetResolver}=visionTasks;
   const vision=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
-  detector=await FaceDetector.createFromOptions(vision,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/latest/blaze_face_short_range.tflite"},runningMode:"IMAGE",minDetectionConfidence:.55});
+  detector=await FaceDetector.createFromOptions(vision,{
+    baseOptions:{
+      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/latest/blaze_face_short_range.tflite"
+    },
+    runningMode:"IMAGE",
+    minDetectionConfidence:.55
+  });
   statusEl.textContent="얼굴 자동 맞춤 준비 완료";
- }catch(e){console.error(e);statusEl.textContent="자동 인식을 불러오지 못했습니다. 수동 조절은 가능합니다."}
+ }catch(e){
+  console.error(e);
+  statusEl.textContent="촬영 가능 · 얼굴 자동 인식은 잠시 후 다시 시도합니다.";
+ }
 }
 init();
 
