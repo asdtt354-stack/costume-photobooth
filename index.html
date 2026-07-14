@@ -111,22 +111,96 @@ input[type=file]{display:none}
 .status{min-height:22px;color:#f5ce48;font-size:13px;margin:10px 2px 2px}
 .adjust{display:grid;grid-template-columns:62px 1fr 48px;gap:8px;align-items:center;margin-top:9px;font-size:13px}
 input[type=range]{width:100%}.note{font-size:12px;color:#bbb;line-height:1.45;margin:10px 2px 0}
+
+.topBar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.adminIcon,.iconBtn{
+  flex:0 0 auto;
+  min-width:auto;
+  border:0;
+  border-radius:999px;
+  background:#2d2d2d;
+  color:#fff;
+  padding:8px 11px;
+  font-size:18px;
+}
+.primaryAction{
+  width:100%;
+  min-height:58px;
+  font-size:18px;
+  box-shadow:0 8px 22px rgba(245,206,72,.18);
+}
+.capturePanel{position:static}
+.adminModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:1300;
+  padding:18px;
+  background:rgba(0,0,0,.72);
+  align-items:center;
+  justify-content:center;
+}
+.adminModal.show{display:flex}
+.adminCard{
+  width:min(100%,500px);
+  max-height:90vh;
+  overflow:auto;
+  border:1px solid #3d3d3d;
+  border-radius:18px;
+  padding:16px;
+  background:#1d1d1d;
+  box-shadow:0 18px 55px rgba(0,0,0,.5);
+}
+.adminHeader{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.adminHeader h2{margin:0;color:#f5ce48;font-size:21px}
+.adminLabel{display:block;margin:12px 0 6px;color:#e5e5e5;font-size:13px;font-weight:800}
+.adminInput{
+  width:100%;
+  border:1px solid #494949;
+  border-radius:10px;
+  padding:12px;
+  background:#111;
+  color:#fff;
+  font-size:15px;
+}
+.counterBox{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:14px;
+  padding:12px;
+  border-radius:12px;
+  background:#292929;
+}
+.counterBox span{color:#bbb;font-size:13px}
+.counterBox strong{color:#f5ce48}
+.adminButtons{margin-top:12px}
+.adminNote{margin:12px 2px 0;color:#aaa;font-size:11px;line-height:1.45}
+
 </style>
 </head>
 <body>
 <main>
-<span class="badge">EAIM EXPERIENCE</span>
+<div class="topBar">
+      <span class="badge">EAIM EXPERIENCE</span>
+      <button id="adminOpenBtn" class="adminIcon" type="button" aria-label="관리자 설정">⚙️</button>
+    </div>
 <h1>EAIM Costume Studio</h1><p class="brandSub">시간을 입다 · Experience Your Story</p>
 <p class="intro">사진을 찍어 대취타 용고 악사로 변신해 보세요.</p>
-<div style="display:flex;align-items:center;justify-content:space-between;margin:4px 2px 9px"><strong style="font-size:17px">🥁 대취타</strong><span style="font-size:12px;color:#aaa">악기 선택</span></div>
-<div class="roles" id="roles"></div>
+<section class="boothHero">
+      <img src="costume_yonggo.png" alt="대취타 용고 체험">
+      <div class="boothHeroText">
+        <strong>🥁 대취타 용고 체험</strong>
+        <span>체험 시작을 누르면 담당자 촬영이 기본으로 열립니다.</span>
+      </div>
+    </section>
+    <div class="roles" id="roles" hidden></div>
 
 <section class="panel capturePanel" id="capturePanel">
-  <p class="captureTitle">현재 체험: <span id="selectedName">용고</span></p>
   <div class="row">
-    <button id="openCameraBtn" class="yellow">📷 체험 시작</button>
-    <label class="filebtn dark" for="galleryInput">🖼️ 사진 선택</label>
-    <input id="galleryInput" type="file" accept="image/*">
+    <button id="openCameraBtn" class="yellow primaryAction">📷 대취타 체험 시작</button>
+    
   </div>
   <div class="status" id="status">얼굴 자동 맞춤 준비 중…</div>
 </section>
@@ -204,8 +278,8 @@ let manual={dx:0,dy:0,scale:1,rotation:0},drag=false,last=null;
 
 function selectCostume(item){
  selected=item;
- selectedName.textContent=item.name;
- fitName.textContent=`${item.name} 전용 기준점 적용`;
+ if(selectedName) selectedName.textContent=item.name;
+ if(fitName) fitName.textContent=`${item.name} 전용 기준점 적용`;
  overlay=new Image();
  overlay.onload=draw;
  overlay.src=item.image;
@@ -291,7 +365,7 @@ async function detect(){
 function showEditor(){stage.classList.add("show");resultPanel.classList.add("show");setTimeout(()=>stage.scrollIntoView({behavior:"smooth",block:"start"}),120)}
 function hideEditor(){stage.classList.remove("show");resultPanel.classList.remove("show")}
 function load(file){if(!file)return;const img=new Image();img.onload=()=>{source=img;URL.revokeObjectURL(img.src);showEditor();detect()};img.src=URL.createObjectURL(file)}
-galleryInput.onchange=e=>load(e.target.files?.[0]);autoBtn.onclick=detect;
+autoBtn.onclick=detect;
 
 let cameraStream=null;
 let facingMode="environment";
@@ -356,7 +430,7 @@ async function startCamera(){
     document.body.style.overflow="hidden";
   }catch(err){
     console.error(err);
-    alert("카메라를 열 수 없습니다. 브라우저의 카메라 권한을 허용하거나 사진 선택을 이용해 주세요.");
+    alert("카메라를 열 수 없습니다. 브라우저의 카메라 권한을 허용해 주세요.");
   }
 }
 function stopCamera(){
@@ -403,35 +477,92 @@ canvas.onpointermove=e=>{if(!drag)return;const p=pt(e);manual.dx+=p.x-last.x;man
 canvas.onpointerup=()=>drag=false;canvas.onpointercancel=()=>drag=false;
 const blob=()=>new Promise(res=>canvas.toBlob(res,"image/jpeg",.96));
 saveBtn.onclick=async()=>{if(!source)return alert("먼저 사진을 찍어 주세요.");const b=await blob(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`EAIM_용고체험.jpg`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-newBtn.onclick=()=>{source=null;detected=null;manual={dx:0,dy:0,scale:1,rotation:0};sync();statusEl.textContent="다음 참가자의 사진을 촬영해 주세요.";galleryInput.value="";hideEditor();draw();document.querySelector("#capturePanel").scrollIntoView({behavior:"smooth",block:"center"});};
+newBtn.onclick=()=>{source=null;detected=null;manual={dx:0,dy:0,scale:1,rotation:0};sync();statusEl.textContent="다음 참가자의 사진을 촬영해 주세요.";hideEditor();draw();document.querySelector("#capturePanel").scrollIntoView({behavior:"smooth",block:"center"});};
 shareBtn.onclick=async()=>{if(!source)return alert("먼저 사진을 찍어 주세요.");const b=await blob(),f=new File([b],`EAIM_용고체험.jpg`,{type:"image/jpeg"});if(navigator.canShare?.({files:[f]}))await navigator.share({title:"EAIM Costume Studio - 용고 체험",files:[f]});else saveBtn.click()}
 draw();
 </script>
 
-<section style="margin:16px 0;padding:14px;border:1px solid #444;border-radius:12px;background:#1f1f1f">
-<h3 style="margin:0 0 10px;color:#f5ce48">관리자 설정</h3>
-<label>Padlet URL</label><br>
-<input id="padletUrl" style="width:100%;margin:4px 0 10px"><br>
-<label>Padlet API Key</label><br>
-<input id="padletKey" type="password" style="width:100%;margin:4px 0 10px"><br>
-<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-<span>현재 번호 : <strong id="counterView">1</strong></span>
-<button id="resetCounterBtn" type="button">번호 초기화</button>
+
+<div class="adminModal" id="adminModal" aria-hidden="true">
+  <div class="adminCard">
+    <div class="adminHeader">
+      <h2>관리자 설정</h2>
+      <button id="adminCloseBtn" class="iconBtn" type="button">✕</button>
+    </div>
+
+    <label class="adminLabel" for="padletUrl">Padlet URL</label>
+    <input id="padletUrl" class="adminInput" type="url" placeholder="https://padlet.com/...">
+
+    <label class="adminLabel" for="padletKey">Padlet API Key</label>
+    <input id="padletKey" class="adminInput" type="password" placeholder="API Key">
+
+    <div class="counterBox">
+      <span>다음 제목</span>
+      <strong id="nextTitleView">대취타체험1</strong>
+    </div>
+
+    <div class="row adminButtons">
+      <button id="saveAdminBtn" class="yellow" type="button">설정 저장</button>
+      <button id="resetCounterBtn" class="dark" type="button">번호 초기화</button>
+    </div>
+
+    <p class="adminNote">
+      설정은 이 기기의 브라우저에 저장됩니다. 공개 웹페이지 코드에 API 키를 직접 넣는 방식은 안전하지 않으므로,
+      실제 자동 업로드에는 별도의 보안 중계 서버 연결이 필요합니다.
+    </p>
+  </div>
 </div>
-</section>
+
 <script>
 (function(){
- const cv=document.getElementById('counterView');
- const r=document.getElementById('resetCounterBtn');
- const n=()=>Number(localStorage.getItem('daechwitaCounter')||1);
- cv.textContent=n();
- r.onclick=()=>{
-   if(confirm('번호를 1부터 다시 시작할까요?')){
-      localStorage.setItem('daechwitaCounter','1');
-      cv.textContent='1';
-      alert('번호가 초기화되었습니다.');
-   }
- };
+  const modal = document.getElementById("adminModal");
+  const openBtn = document.getElementById("adminOpenBtn");
+  const closeBtn = document.getElementById("adminCloseBtn");
+  const saveBtn = document.getElementById("saveAdminBtn");
+  const resetBtn = document.getElementById("resetCounterBtn");
+  const urlInput = document.getElementById("padletUrl");
+  const keyInput = document.getElementById("padletKey");
+  const titleView = document.getElementById("nextTitleView");
+
+  const getCounter = () => Math.max(1, Number(localStorage.getItem("daechwitaCounter") || 1));
+  const refreshTitle = () => {
+    titleView.textContent = `대취타체험${getCounter()}`;
+  };
+
+  function openAdmin(){
+    urlInput.value = localStorage.getItem("padletUrl") || "";
+    keyInput.value = localStorage.getItem("padletKey") || "";
+    refreshTitle();
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden","false");
+  }
+  function closeAdmin(){
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden","true");
+  }
+
+  openBtn.addEventListener("click", openAdmin);
+  closeBtn.addEventListener("click", closeAdmin);
+  modal.addEventListener("click", (e) => {
+    if(e.target === modal) closeAdmin();
+  });
+
+  saveBtn.addEventListener("click", () => {
+    localStorage.setItem("padletUrl", urlInput.value.trim());
+    localStorage.setItem("padletKey", keyInput.value.trim());
+    alert("관리자 설정을 저장했습니다.");
+    closeAdmin();
+  });
+
+  resetBtn.addEventListener("click", () => {
+    if(confirm("번호를 1부터 다시 시작할까요?")){
+      localStorage.setItem("daechwitaCounter","1");
+      refreshTitle();
+      alert("다음 제목이 대취타체험1로 초기화되었습니다.");
+    }
+  });
+
+  refreshTitle();
 })();
 </script>
 
