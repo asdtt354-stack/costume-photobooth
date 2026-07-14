@@ -12,6 +12,7 @@ main{width:min(100%,560px);margin:auto;padding:14px}
 .badge{display:inline-block;background:#2d2d2d;color:#f5ce48;border-radius:999px;padding:5px 10px;font-size:12px}
 h1{font-size:25px;margin:8px 0 2px;letter-spacing:-.5px}.brandSub{font-size:13px;color:#f5ce48;margin:0 0 7px;font-weight:750}.intro{color:#ccc;font-size:14px;line-height:1.5;margin:0 0 12px}
 .roles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:13px}
+.roles[hidden]{display:none!important}
 .boothHero{
   overflow:hidden;
   border:2px solid #f5ce48;
@@ -192,17 +193,17 @@ input[type=range]{width:100%}.note{font-size:12px;color:#bbb;line-height:1.45;ma
       <img src="costume_yonggo.png" alt="대취타 용고 체험">
       <div class="boothHeroText">
         <strong>🥁 대취타 용고 체험</strong>
-        <span>체험 시작을 누르면 담당자 촬영이 기본으로 열립니다.</span>
+        <span>사진 촬영을 누르면 담당자 촬영이 기본으로 열립니다.</span>
       </div>
     </section>
     <div class="roles" id="roles" hidden></div>
 
 <section class="panel capturePanel" id="capturePanel">
   <div class="row">
-    <button id="openCameraBtn" class="yellow primaryAction">📷 대취타 체험 시작</button>
+    <button id="openCameraBtn" class="yellow primaryAction">📷 사진 촬영</button>
     
   </div>
-  <div class="status" id="status">얼굴 자동 맞춤 준비 중…</div>
+  <div class="status" id="status">촬영 준비 완료</div>
 </section>
 
 <section class="stage" id="stage">
