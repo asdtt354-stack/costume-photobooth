@@ -229,10 +229,10 @@ input[type=range]{width:100%}.note{font-size:12px;color:#bbb;line-height:1.45;ma
   <div class="adjust"><span>얼굴 크기</span><input id="scale" type="range" min=".7" max="1.5" step=".01" value="1"><output id="scaleOut">1.00</output></div>
   <div class="adjust"><span>기울기</span><input id="rotate" type="range" min="-18" max="18" step="1" value="0"><output id="rotateOut">0°</output></div>
   <div class="row" style="margin-top:12px">
-    <button id="autoBtn" class="dark">✨ 자동 맞춤</button><button id="resetBtn" class="dark">↺ 초기화</button>
+    <button id="autoBtn" type="button" class="dark">✨ 자동 맞춤</button><button id="resetBtn" type="button" class="dark">↺ 초기화</button>
   </div>
   <div class="row" style="margin-top:8px">
-    <button id="saveBtn" class="white">⬇ 내 사진 저장</button><button id="padletBtn" class="yellow">☁ 패들렛 업로드</button><button id="newBtn" class="dark">다음 참가자</button>
+    <button id="saveBtn" type="button" class="white">⬇ 내 사진 저장</button><button id="padletBtn" type="button" class="yellow">☁ 패들렛 업로드</button><button id="newBtn" type="button" class="dark">다음 참가자</button>
   </div>
   <div class="uploadStatus" id="uploadStatus">패들렛 자동 업로드 대기</div>
   <p class="note">촬영 후 용고 코스튬의 얼굴 위치와 크기에 자동으로 맞춰집니다. 관리자 설정에서 자동 업로드를 켜면 완성 사진이 패들렛에 올라갑니다.</p>
@@ -275,21 +275,7 @@ input[type=range]{width:100%}.note{font-size:12px;color:#bbb;line-height:1.45;ma
 </div>
 
 
-<script>
-document.addEventListener("DOMContentLoaded",()=>{
-  const openBtn=document.getElementById("openCameraBtn");
-  const modeModal=document.getElementById("modeModal");
-  if(openBtn && modeModal){
-    openBtn.disabled=false;
-    openBtn.style.pointerEvents="auto";
-    openBtn.addEventListener("click",()=>{
-      modeModal.classList.add("show");
-      modeModal.setAttribute("aria-hidden","false");
-      document.body.style.overflow="hidden";
-    });
-  }
-});
-</script>
+
 
 <script type="module">
 const COSTUMES = [
@@ -303,8 +289,26 @@ const COSTUMES = [
   }
 ];
 const canvas=document.querySelector("#canvas"),ctx=canvas.getContext("2d");
-const stage=document.querySelector("#stage"),resultPanel=document.querySelector("#resultPanel"),selectedName=document.querySelector("#selectedName"),fitName=document.querySelector("#fitName"),uploadStatus=document.querySelector("#uploadStatus"),padletBtn=document.querySelector("#padletBtn");
-const roles=document.querySelector("#roles"),statusEl=document.querySelector("#status"),loading=document.querySelector("#loading");
+const stage=document.querySelector("#stage");
+const resultPanel=document.querySelector("#resultPanel");
+const selectedName=document.querySelector("#selectedName");
+const fitName=document.querySelector("#fitName");
+const uploadStatus=document.querySelector("#uploadStatus");
+const roles=document.querySelector("#roles");
+const statusEl=document.querySelector("#status");
+const loading=document.querySelector("#loading");
+
+const openCameraBtn=document.querySelector("#openCameraBtn");
+const autoBtn=document.querySelector("#autoBtn");
+const resetBtn=document.querySelector("#resetBtn");
+const saveBtn=document.querySelector("#saveBtn");
+const padletBtn=document.querySelector("#padletBtn");
+const newBtn=document.querySelector("#newBtn");
+
+const scaleInput=document.querySelector("#scale");
+const rotateInput=document.querySelector("#rotate");
+const scaleOut=document.querySelector("#scaleOut");
+const rotateOut=document.querySelector("#rotateOut");
 let selected=COSTUMES[0],overlay=new Image(),source=null,detector=null,detected=null;
 let manual={dx:0,dy:0,scale:1,rotation:0},drag=false,last=null;
 
@@ -413,7 +417,7 @@ async function detect(){
 function showEditor(){stage.classList.add("show");resultPanel.classList.add("show");setTimeout(()=>stage.scrollIntoView({behavior:"smooth",block:"start"}),120)}
 function hideEditor(){stage.classList.remove("show");resultPanel.classList.remove("show")}
 function load(file){if(!file)return;const img=new Image();img.onload=()=>{source=img;URL.revokeObjectURL(img.src);showEditor();detect()};img.src=URL.createObjectURL(file)}
-autoBtn.onclick=detect;
+autoBtn.addEventListener('click', detect);
 
 let cameraStream=null;
 let facingMode="environment";
@@ -504,7 +508,7 @@ function captureGuidedPhoto(){
   img.onload=()=>{source=img;stopCamera();showEditor();detect()};
   img.src=temp.toDataURL("image/jpeg",.95);
 }
-document.querySelector("#openCameraBtn").onclick=showModePicker;
+openCameraBtn.addEventListener("click", showModePicker);
 document.querySelector("#staffModeBtn").onclick=async()=>{applyCaptureMode("staff");hideModePicker();await startCamera();};
 document.querySelector("#selfieModeBtn").onclick=async()=>{applyCaptureMode("selfie");hideModePicker();await startCamera();};
 document.querySelector("#modeCancelBtn").onclick=hideModePicker;
@@ -576,9 +580,9 @@ async function uploadToPadlet({force=false}={}){
   }
 }
 
-function sync(){scale.value=manual.scale;rotate.value=manual.rotation;scaleOut.value=Number(manual.scale).toFixed(2);rotateOut.value=`${manual.rotation}°`}
-scale.oninput=e=>{manual.scale=+e.target.value;scaleOut.value=manual.scale.toFixed(2);draw()};
-rotate.oninput=e=>{manual.rotation=+e.target.value;rotateOut.value=`${manual.rotation}°`;draw()};
+function sync(){scaleInput.value=manual.scale;rotateInput.value=manual.rotation;scaleOut.value=Number(manual.scale).toFixed(2);rotateOut.value=`${manual.rotation}°`}
+scaleInput.oninput=e=>{manual.scale=+e.target.value;scaleOut.value=manual.scale.toFixed(2);draw()};
+rotateInput.oninput=e=>{manual.rotation=+e.target.value;rotateOut.value=`${manual.rotation}°`;draw()};
 resetBtn.onclick=()=>{manual={dx:0,dy:0,scale:1,rotation:0};sync();draw()};
 function pt(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height}}
 canvas.onpointerdown=e=>{if(!source)return;drag=true;last=pt(e);canvas.setPointerCapture(e.pointerId)}
@@ -589,6 +593,9 @@ saveBtn.onclick=async()=>{if(!source)return alert("먼저 사진을 찍어 주�
 newBtn.onclick=()=>{source=null;detected=null;manual={dx:0,dy:0,scale:1,rotation:0};sync();statusEl.textContent="다음 참가자의 사진을 촬영해 주세요.";setUploadStatus("패들렛 자동 업로드 대기");hideEditor();draw();document.querySelector("#capturePanel").scrollIntoView({behavior:"smooth",block:"center"});};
 padletBtn.onclick=()=>uploadToPadlet({force:true});
 draw();
+openCameraBtn.disabled=false;
+openCameraBtn.setAttribute("aria-disabled","false");
+openCameraBtn.style.pointerEvents="auto";
 </script>
 
 
