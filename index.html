@@ -178,6 +178,20 @@ input[type=range]{width:100%}.note{font-size:12px;color:#bbb;line-height:1.45;ma
 .counterBox strong{color:#f5ce48}
 .adminButtons{margin-top:12px}
 .adminNote{margin:12px 2px 0;color:#aaa;font-size:11px;line-height:1.45}
+.uploadStatus{
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:#292929;
+  color:#d7d7d7;
+  font-size:13px;
+}
+.uploadStatus.uploading{color:#f5ce48}
+.uploadStatus.success{color:#72df86;background:rgba(70,160,90,.13)}
+.uploadStatus.error{color:#ff8d8d;background:rgba(180,60,60,.13)}
+.switchRow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:11px 12px;border-radius:11px;background:#292929}
+.switchRow label{font-size:13px;font-weight:800}
+.switchRow input{width:22px;height:22px}
 
 </style>
 </head>
@@ -218,9 +232,10 @@ input[type=range]{width:100%}.note{font-size:12px;color:#bbb;line-height:1.45;ma
     <button id="autoBtn" class="dark">✨ 자동 맞춤</button><button id="resetBtn" class="dark">↺ 초기화</button>
   </div>
   <div class="row" style="margin-top:8px">
-    <button id="saveBtn" class="white">⬇ 내 사진 저장</button><button id="shareBtn" class="yellow">공유</button><button id="newBtn" class="dark">다음 참가자</button>
+    <button id="saveBtn" class="white">⬇ 내 사진 저장</button><button id="padletBtn" class="yellow">☁ 패들렛 업로드</button><button id="newBtn" class="dark">다음 참가자</button>
   </div>
-  <p class="note">촬영 후 용고 코스튬의 얼굴 위치와 크기에 자동으로 맞춰집니다. 사진은 외부 서버에 저장되지 않고 이 기기 안에서만 합성됩니다.</p>
+  <div class="uploadStatus" id="uploadStatus">패들렛 자동 업로드 대기</div>
+  <p class="note">촬영 후 용고 코스튬의 얼굴 위치와 크기에 자동으로 맞춰집니다. 관리자 설정에서 자동 업로드를 켜면 완성 사진이 패들렛에 올라갑니다.</p>
 </section>
 </main>
 
@@ -268,11 +283,11 @@ const COSTUMES = [
     subtitle:"대취타 용고 체험",
     image:"costume_yonggo.png",
     hole:{x:448,y:330,w:136,h:144,cx:516,cy:402},
-    faceFit:{scale:0.98,offsetX:0,offsetY:3,rotation:0}
+    faceFit:{scale:0.98,offsetX:0,offsetY:9,rotation:0}
   }
 ];
 const canvas=document.querySelector("#canvas"),ctx=canvas.getContext("2d");
-const stage=document.querySelector("#stage"),resultPanel=document.querySelector("#resultPanel"),selectedName=document.querySelector("#selectedName"),fitName=document.querySelector("#fitName");
+const stage=document.querySelector("#stage"),resultPanel=document.querySelector("#resultPanel"),selectedName=document.querySelector("#selectedName"),fitName=document.querySelector("#fitName"),uploadStatus=document.querySelector("#uploadStatus"),padletBtn=document.querySelector("#padletBtn");
 const roles=document.querySelector("#roles"),statusEl=document.querySelector("#status"),loading=document.querySelector("#loading");
 let selected=COSTUMES[0],overlay=new Image(),source=null,detector=null,detected=null;
 let manual={dx:0,dy:0,scale:1,rotation:0},drag=false,last=null;
@@ -313,7 +328,6 @@ async function init(){
   statusEl.textContent="얼굴 자동 맞춤 준비 완료";
  }catch(e){console.error(e);statusEl.textContent="자동 인식을 불러오지 못했습니다. 수동 조절은 가능합니다."}
 }
-applyCaptureMode("staff");
 init();
 
 function draw(){
@@ -361,7 +375,11 @@ async function detect(){
    detected={box:d.boundingBox,eyeAngle:a};statusEl.textContent=`${selected.name} 얼굴 위치·크기·기울기 자동 맞춤 완료`;
   }
  }catch(e){console.error(e);detected=null;statusEl.textContent="자동 맞춤 오류가 발생했습니다."}
- loading.classList.remove("show");draw();
+ loading.classList.remove("show");
+ draw();
+ if(detected && window.EAIM_PADLET?.isAutoUpload()){
+   setTimeout(()=>uploadToPadlet(),180);
+ }
 }
 function showEditor(){stage.classList.add("show");resultPanel.classList.add("show");setTimeout(()=>stage.scrollIntoView({behavior:"smooth",block:"start"}),120)}
 function hideEditor(){stage.classList.remove("show");resultPanel.classList.remove("show")}
@@ -411,6 +429,7 @@ function applyCaptureMode(mode){
     cameraHint.textContent="담당자가 뒤 카메라로 촬영합니다. 얼굴과 어깨가 자연스럽게 보이도록 약 1m 떨어져 주세요.";
   }
 }
+applyCaptureMode("staff");
 
 async function startCamera(){
   try{
@@ -468,6 +487,66 @@ document.querySelector("#switchCameraBtn").onclick=async()=>{
   await startCamera();
 };
 window.addEventListener("pagehide",stopCamera);
+
+function setUploadStatus(message,type=""){
+  uploadStatus.textContent=message;
+  uploadStatus.className=`uploadStatus ${type}`.trim();
+}
+
+async function uploadToPadlet({force=false}={}){
+  if(!source){
+    alert("먼저 사진을 찍어 주세요.");
+    return false;
+  }
+  const settings=window.EAIM_PADLET;
+  if(!settings){
+    setUploadStatus("관리자 설정을 불러오지 못했습니다.","error");
+    return false;
+  }
+  if(!force && !settings.isAutoUpload()){
+    setUploadStatus("자동 업로드가 꺼져 있습니다.");
+    return false;
+  }
+
+  const apiKey=settings.getApiKey();
+  const boardId=settings.getBoardId();
+  if(!apiKey){
+    setUploadStatus("⚙️ 관리자 설정에서 Padlet API Key를 입력해 주세요.","error");
+    return false;
+  }
+  if(!boardId){
+    setUploadStatus("⚙️ 관리자 설정에서 Padlet Board ID를 입력해 주세요.","error");
+    return false;
+  }
+
+  const title=settings.nextTitle();
+  setUploadStatus(`${title} 업로드 중…`,"uploading");
+  padletBtn.disabled=true;
+
+  try{
+    const imageData=canvas.toDataURL("image/jpeg",0.88);
+    const response=await fetch("/api/padlet-upload",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({apiKey,boardId,title,imageData})
+    });
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok){
+      throw new Error(result.error||`업로드 실패 (${response.status})`);
+    }
+
+    settings.increaseCounter();
+    setUploadStatus(`✅ ${title} 패들렛 업로드 완료`,"success");
+    return true;
+  }catch(error){
+    console.error(error);
+    setUploadStatus(`업로드 실패: ${error.message}`,"error");
+    return false;
+  }finally{
+    padletBtn.disabled=false;
+  }
+}
+
 function sync(){scale.value=manual.scale;rotate.value=manual.rotation;scaleOut.value=Number(manual.scale).toFixed(2);rotateOut.value=`${manual.rotation}°`}
 scale.oninput=e=>{manual.scale=+e.target.value;scaleOut.value=manual.scale.toFixed(2);draw()};
 rotate.oninput=e=>{manual.rotation=+e.target.value;rotateOut.value=`${manual.rotation}°`;draw()};
@@ -478,8 +557,8 @@ canvas.onpointermove=e=>{if(!drag)return;const p=pt(e);manual.dx+=p.x-last.x;man
 canvas.onpointerup=()=>drag=false;canvas.onpointercancel=()=>drag=false;
 const blob=()=>new Promise(res=>canvas.toBlob(res,"image/jpeg",.96));
 saveBtn.onclick=async()=>{if(!source)return alert("먼저 사진을 찍어 주세요.");const b=await blob(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`EAIM_용고체험.jpg`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-newBtn.onclick=()=>{source=null;detected=null;manual={dx:0,dy:0,scale:1,rotation:0};sync();statusEl.textContent="다음 참가자의 사진을 촬영해 주세요.";hideEditor();draw();document.querySelector("#capturePanel").scrollIntoView({behavior:"smooth",block:"center"});};
-shareBtn.onclick=async()=>{if(!source)return alert("먼저 사진을 찍어 주세요.");const b=await blob(),f=new File([b],`EAIM_용고체험.jpg`,{type:"image/jpeg"});if(navigator.canShare?.({files:[f]}))await navigator.share({title:"EAIM Costume Studio - 용고 체험",files:[f]});else saveBtn.click()}
+newBtn.onclick=()=>{source=null;detected=null;manual={dx:0,dy:0,scale:1,rotation:0};sync();statusEl.textContent="다음 참가자의 사진을 촬영해 주세요.";setUploadStatus("패들렛 자동 업로드 대기");hideEditor();draw();document.querySelector("#capturePanel").scrollIntoView({behavior:"smooth",block:"center"});};
+padletBtn.onclick=()=>uploadToPadlet({force:true});
 draw();
 </script>
 
@@ -491,11 +570,19 @@ draw();
       <button id="adminCloseBtn" class="iconBtn" type="button">✕</button>
     </div>
 
-    <label class="adminLabel" for="padletUrl">Padlet URL</label>
+    <label class="adminLabel" for="padletApiKey">Padlet API Key</label>
+    <input id="padletApiKey" class="adminInput" type="password" placeholder="처음 한 번 입력">
+
+    <label class="adminLabel" for="padletBoardId">Padlet Board ID</label>
+    <input id="padletBoardId" class="adminInput" type="text" placeholder="Padlet 개발자 화면의 Board ID">
+
+    <label class="adminLabel" for="padletUrl">참가자용 Padlet 주소</label>
     <input id="padletUrl" class="adminInput" type="url" placeholder="https://padlet.com/...">
 
-    <label class="adminLabel" for="padletKey">Padlet API Key</label>
-    <input id="padletKey" class="adminInput" type="password" placeholder="API Key">
+    <div class="switchRow">
+      <label for="autoUploadToggle">촬영 후 자동 업로드</label>
+      <input id="autoUploadToggle" type="checkbox" checked>
+    </div>
 
     <div class="counterBox">
       <span>다음 제목</span>
@@ -508,8 +595,7 @@ draw();
     </div>
 
     <p class="adminNote">
-      설정은 이 기기의 브라우저에 저장됩니다. 공개 웹페이지 코드에 API 키를 직접 넣는 방식은 안전하지 않으므로,
-      실제 자동 업로드에는 별도의 보안 중계 서버 연결이 필요합니다.
+      API Key, Board ID, 참가자용 주소는 이 기기의 브라우저에 저장됩니다. 행사 전용 기기에서만 사용해 주세요.
     </p>
   </div>
 </div>
@@ -521,8 +607,10 @@ draw();
   const closeBtn = document.getElementById("adminCloseBtn");
   const saveBtn = document.getElementById("saveAdminBtn");
   const resetBtn = document.getElementById("resetCounterBtn");
+  const apiKeyInput = document.getElementById("padletApiKey");
+  const boardInput = document.getElementById("padletBoardId");
   const urlInput = document.getElementById("padletUrl");
-  const keyInput = document.getElementById("padletKey");
+  const autoToggle = document.getElementById("autoUploadToggle");
   const titleView = document.getElementById("nextTitleView");
 
   const getCounter = () => Math.max(1, Number(localStorage.getItem("daechwitaCounter") || 1));
@@ -530,9 +618,24 @@ draw();
     titleView.textContent = `대취타체험${getCounter()}`;
   };
 
+  window.EAIM_PADLET = {
+    getCounter,
+    nextTitle: () => `대취타체험${getCounter()}`,
+    increaseCounter: () => {
+      localStorage.setItem("daechwitaCounter", String(getCounter() + 1));
+      refreshTitle();
+    },
+    getApiKey: () => (localStorage.getItem("padletApiKey") || "").trim(),
+    getBoardId: () => (localStorage.getItem("padletBoardId") || "").trim(),
+    getGalleryUrl: () => (localStorage.getItem("padletUrl") || "").trim(),
+    isAutoUpload: () => localStorage.getItem("padletAutoUpload") !== "false"
+  };
+
   function openAdmin(){
+    apiKeyInput.value = localStorage.getItem("padletApiKey") || "";
+    boardInput.value = localStorage.getItem("padletBoardId") || "";
     urlInput.value = localStorage.getItem("padletUrl") || "";
-    keyInput.value = localStorage.getItem("padletKey") || "";
+    autoToggle.checked = localStorage.getItem("padletAutoUpload") !== "false";
     refreshTitle();
     modal.classList.add("show");
     modal.setAttribute("aria-hidden","false");
@@ -549,8 +652,10 @@ draw();
   });
 
   saveBtn.addEventListener("click", () => {
+    localStorage.setItem("padletApiKey", apiKeyInput.value.trim());
+    localStorage.setItem("padletBoardId", boardInput.value.trim());
     localStorage.setItem("padletUrl", urlInput.value.trim());
-    localStorage.setItem("padletKey", keyInput.value.trim());
+    localStorage.setItem("padletAutoUpload", autoToggle.checked ? "true" : "false");
     alert("관리자 설정을 저장했습니다.");
     closeAdmin();
   });
@@ -564,6 +669,15 @@ draw();
   });
 
   refreshTitle();
+
+  // 앱을 처음 열었거나 필수 설정이 없으면 관리자 설정을 자동으로 엽니다.
+  const needsInitialSetup =
+    !(localStorage.getItem("padletApiKey") || "").trim() ||
+    !(localStorage.getItem("padletBoardId") || "").trim();
+
+  if(needsInitialSetup){
+    setTimeout(openAdmin, 250);
+  }
 })();
 </script>
 
